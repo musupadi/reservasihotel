@@ -1,0 +1,236 @@
+# ========================================
+# Hotel Reservation System - .gitignore
+# ========================================
+
+# ==========================================
+# Go Backend (api-gateway/)
+# ==========================================
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Dependency directories
+vendor/
+
+# Go build cache
+.go-build-cache/
+
+# Environment files
+.env
+.env.local
+.env.production
+*.env
+
+# ==========================================
+# Node.js / React (web-ui/)
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vite
+.vite/
+
+# ==========================================
+# Hyperledger Fabric (network/)
+# ==========================================
+
+# Crypto materials (JANGAN COMMIT!)
+network/organizations/ordererOrganizations/
+network/organizations/peerOrganizations/
+network/crypto-config/
+network/channel-artifacts/
+
+# Wallet credentials
+wallet/
+*.id
+
+# Docker volumes
+network/chaincode/
+ledgers-backup/
+
+# Fabric binary logs
+*.log
+logs/
+
+# Fabric connection profiles dengan credentials
+*connection-profile.yaml
+*connection-profile.json
+
+# ==========================================
+# Database
+# ==========================================
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+
+# MySQL dumps
+mysql-data/
+*.dump
+
+# ==========================================
+# Chaincode Build Artifacts
+# ==========================================
+chaincode/*/vendor/
+chaincode/*/*.tar.gz
+chaincode/*/pkg/
+
+# ==========================================
+# Fabric Binaries (OPTIONAL - bisa di-commit atau tidak)
+# ==========================================
+# Uncomment baris di bawah jika mau ignore bin/
+# bin/
+# config/core.yaml
+# config/orderer.yaml
+
+# ==========================================
+# OS Specific
+# ==========================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ==========================================
+# IDE & Editors
+# ==========================================
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+.netrwhist
+*~
+
+# ==========================================
+# Testing & Coverage
+# ==========================================
+coverage/
+*.cover
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==========================================
+# Temporary Files
+# ==========================================
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~.nib
+tmp/
+temp/
+
+# ==========================================
+# Archives
+# ==========================================
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ==========================================
+# Docker (Optional)
+# ==========================================
+# Uncomment jika tidak mau commit docker files
+# docker-compose.override.yml
+# .dockerignore
+
+# ==========================================
+# Documentation Build
+# ==========================================
+docs/_build/
+site/
+
+# ==========================================
+# Project Specific
+# ==========================================
+
+# Backup files
+*.backup
+backup/
+
+# Production builds
+production/
+
+# Keys & Certificates (PENTING - JANGAN COMMIT!)
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+!network/organizations/.gitkeep
+
+# Chaincode deployment configs dengan sensitive data
+*-connection.json
+*-connection.yaml
+
+# ==========================================
+# Keep Empty Folders
+# ==========================================
+!.gitkeep

@@ -2,6 +2,13 @@
 
 Sistem reservasi hotel berbasis blockchain menggunakan **Hyperledger Fabric**, **Go Backend**, **React Frontend**, dan **MySQL Database**.
 
+## 📖 Quick Links
+
+- 📦 **[INSTALLATION.md](INSTALLATION.md)** - First-time setup guide (npm install, go mod, database setup)
+- ⚡ **[QUICKSTART.md](QUICKSTART.md)** - Quick 3-terminal startup
+- 📚 **[PANDUAN-LENGKAP.md](PANDUAN-LENGKAP.md)** - Complete step-by-step guide (Bahasa Indonesia)
+- 📝 **[CHANGELOG.md](CHANGELOG.md)** - Version history
+
 ---
 
 ## 🏗️ Arsitektur Sistem
@@ -38,20 +45,208 @@ Pastikan software berikut sudah terinstall:
 ### 1. **XAMPP** (untuk MySQL)
 - Download: https://www.apachefriends.org/
 - Versi: 8.0 atau lebih baru
+- Cek: Buka XAMPP Control Panel
 
 ### 2. **Docker Desktop**
 - Download: https://www.docker.com/products/docker-desktop
+- Versi: 20.10+
+- Cek: `docker --version` dan `docker-compose --version`
 - **PENTING**: Pastikan Docker Desktop sudah running sebelum start Fabric
 
 ### 3. **Go (Golang)**
 - Download: https://go.dev/dl/
-- Versi: 1.19+
+- Versi: 1.19+ (Recommended: 1.21+)
 - Cek: `go version`
 
 ### 4. **Node.js & npm**
 - Download: https://nodejs.org/
-- Versi: 16.x+
+- Versi: 16.x+ (Recommended: 18.x atau 20.x LTS)
 - Cek: `node --version` dan `npm --version`
+
+### 5. **Git** (Optional, untuk clone repository)
+- Download: https://git-scm.com/downloads
+- Cek: `git --version`
+
+---
+
+## 📦 Installation & Setup
+
+### **STEP 0: Clone Repository (jika dari GitHub)**
+
+```powershell
+# Clone repository
+git clone https://github.com/YOUR_USERNAME/reservasihotel.git
+cd reservasihotel
+```
+
+### **STEP 0.1: Setup Go Backend Dependencies**
+
+```powershell
+cd C:\Blockchain\reservasihotel\api-gateway
+
+# Download Go dependencies
+go mod download
+
+# Verify dependencies
+go mod verify
+
+# (Optional) Tidy up dependencies
+go mod tidy
+```
+
+**Expected modules:**
+- `github.com/gin-gonic/gin` - HTTP web framework
+- `gorm.io/gorm` - ORM library
+- `gorm.io/driver/mysql` - MySQL driver
+- `github.com/hyperledger/fabric-sdk-go` - Fabric SDK
+- `github.com/joho/godotenv` - Environment variables
+- `github.com/gin-contrib/cors` - CORS middleware
+
+### **STEP 0.2: Setup React Frontend Dependencies**
+
+```powershell
+cd C:\Blockchain\reservasihotel\web-ui
+
+# Install Node.js dependencies
+npm install
+
+# (Optional) Update dependencies
+npm update
+```
+
+**Expected packages:**
+- `react` & `react-dom` - React framework
+- `vite` - Build tool & dev server
+- `tailwindcss` - CSS framework
+- `react-router-dom` - Routing
+- `axios` - HTTP client
+- `react-hot-toast` - Notifications
+
+**Installation time:** ~2-5 menit (tergantung koneksi internet)
+
+### **STEP 0.3: Setup MySQL Database**
+
+```powershell
+# 1. Start XAMPP MySQL
+# 2. Buka phpMyAdmin: http://localhost/phpmyadmin
+# 3. Buat database baru: "reservation"
+# 4. Import schema (jika ada file .sql)
+```
+
+**Create Tables Manually (jika belum ada):**
+```sql
+-- Database: reservation
+CREATE DATABASE IF NOT EXISTS reservation;
+USE reservation;
+
+-- Table: hotels
+CREATE TABLE hotels (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    location VARCHAR(255),
+    rating DECIMAL(3,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: room_types
+CREATE TABLE room_types (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    hotel_id INT,
+    type_name VARCHAR(100),
+    price DECIMAL(10,2),
+    capacity INT,
+    FOREIGN KEY (hotel_id) REFERENCES hotels(id)
+);
+
+-- Table: reservations
+CREATE TABLE reservations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    reservation_id VARCHAR(100) UNIQUE,
+    hotel_id INT,
+    room_type_id INT,
+    check_in DATE,
+    check_out DATE,
+    guest_count INT,
+    customer_ref VARCHAR(100),
+    price DECIMAL(10,2),
+    currency VARCHAR(10),
+    status VARCHAR(50),
+    created_by_org VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (hotel_id) REFERENCES hotels(id),
+    FOREIGN KEY (room_type_id) REFERENCES room_types(id)
+);
+
+-- Table: reservation_history
+CREATE TABLE reservation_history (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    reservation_id VARCHAR(100),
+    action VARCHAR(50),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### **STEP 0.4: Setup Hyperledger Fabric Network**
+
+```powershell
+cd C:\Blockchain\reservasihotel\network
+
+# Fabric CLI tools sudah ada di folder bin/
+# Crypto materials akan di-generate otomatis saat docker-compose up
+
+# Verifikasi Docker images (download jika belum ada)
+docker images | findstr hyperledger
+
+# Jika belum ada, pull images:
+docker pull hyperledger/fabric-peer:2.5
+docker pull hyperledger/fabric-orderer:2.5
+docker pull hyperledger/fabric-tools:2.5
+docker pull couchdb:3.3.2
+```
+
+### **STEP 0.5: Verification Checklist** ✅
+
+Sebelum menjalankan sistem, pastikan semua ini sudah OK:
+
+```powershell
+# ✅ Check Go
+go version
+# Expected: go version go1.21.x windows/amd64 (atau lebih baru)
+
+# ✅ Check Node.js
+node --version
+npm --version
+# Expected: v18.x.x atau v20.x.x dan npm 9.x.x+
+
+# ✅ Check Docker
+docker --version
+docker-compose --version
+docker ps
+# Expected: Docker Desktop running, no errors
+
+# ✅ Check XAMPP MySQL
+# Buka http://localhost/phpmyadmin
+# Pastikan database "reservation" sudah ada
+
+# ✅ Check Go dependencies
+cd C:\Blockchain\reservasihotel\api-gateway
+go mod verify
+# Expected: all modules verified
+
+# ✅ Check npm dependencies
+cd C:\Blockchain\reservasihotel\web-ui
+npm list --depth=0
+# Expected: list of installed packages
+
+# ✅ Check Fabric binaries
+cd C:\Blockchain\reservasihotel\bin
+ls peer.exe
+# Expected: File exists
+```
+
+**Jika semua ✅ maka Anda siap menjalankan sistem!**
 
 ---
 
@@ -316,22 +511,101 @@ taskkill /PID <PID> /F
 
 # Atau test via command line
 mysql -u root -p -h localhost
+
+# Error: Database 'reservation' doesn't exist
+# Solution: Buat database di phpMyAdmin atau via MySQL CLI:
+# CREATE DATABASE reservation;
+```
+
+#### 3.1 **MySQL Access Denied**
+```powershell
+# Error: Access denied for user 'root'@'localhost'
+# Solution 1: Reset MySQL password di XAMPP
+# Solution 2: Update connection string di api-gateway/main.go
+# Default: root:@tcp(127.0.0.1:3306)/reservation
 ```
 
 #### 4. **Go Module Issues**
+
+##### **Error: `cannot find module`**
 ```powershell
 cd C:\Blockchain\reservasihotel\api-gateway
+
+# Solution 1: Download dependencies
+go mod download
+
+# Solution 2: Clean cache and re-download
 go clean -modcache
 go mod download
+
+# Solution 3: Tidy up go.mod
 go mod tidy
 ```
 
+##### **Error: `go: cannot find main module`**
+```powershell
+# Pastikan Anda di folder api-gateway yang ada file go.mod
+cd C:\Blockchain\reservasihotel\api-gateway
+ls go.mod  # Harus ada file ini
+```
+
+##### **Error: Fabric SDK compile error**
+```powershell
+# Fabric SDK kadang butuh CGO
+# Install MinGW-w64 (untuk Windows):
+# https://sourceforge.net/projects/mingw-w64/
+
+# Set environment variable:
+$env:CGO_ENABLED=1
+go build
+```
+
 #### 5. **Node.js/npm Issues**
+
+##### **Error: `npm install` gagal**
 ```powershell
 cd C:\Blockchain\reservasihotel\web-ui
+
+# Solution 1: Clear cache
+npm cache clean --force
+npm install
+
+# Solution 2: Delete node_modules dan reinstall
 Remove-Item -Recurse -Force node_modules
 Remove-Item package-lock.json
 npm install
+
+# Solution 3: Gunakan npm ci (clean install)
+npm ci
+```
+
+##### **Error: `EACCES` permission denied**
+```powershell
+# Jalankan PowerShell sebagai Administrator
+# Atau gunakan npm config:
+npm config set unsafe-perm true
+npm install
+```
+
+##### **Error: `node-gyp` build failed**
+```powershell
+# Install Visual Studio Build Tools
+npm install --global windows-build-tools
+
+# Atau install Python 3.x dan set npm config:
+npm config set python "C:\Python311\python.exe"
+```
+
+##### **Error: Port 3000 sudah dipakai**
+```powershell
+# Cek proses yang pakai port 3000
+netstat -ano | findstr :3000
+
+# Kill process (ganti <PID>)
+taskkill /PID <PID> /F
+
+# Atau ubah port di package.json:
+# "dev": "vite --port 3001"
 ```
 
 #### 6. **Backend Shows "Offline" di Frontend**
@@ -444,22 +718,133 @@ export FABRIC_USER_ID="admin"
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-## 📄 License
+## � Quick Reference Commands
+
+### **Daily Development Workflow**
+
+```powershell
+# Morning startup (3 terminals)
+# Terminal 1: Fabric
+cd C:\Blockchain\reservasihotel\network
+docker-compose -f docker-compose-simple.yaml up -d
+
+# Terminal 2: Backend
+cd C:\Blockchain\reservasihotel\api-gateway
+go run main.go blockchain.go fabric_client.go
+
+# Terminal 3: Frontend
+cd C:\Blockchain\reservasihotel\web-ui
+npm run dev
+```
+
+### **Restart Services**
+
+```powershell
+# Restart Backend only
+# Terminal 2: Ctrl+C, then:
+go run main.go blockchain.go fabric_client.go
+
+# Restart Frontend only
+# Terminal 3: Ctrl+C, then:
+npm run dev
+
+# Restart Fabric Network
+cd C:\Blockchain\reservasihotel\network
+docker-compose -f docker-compose-simple.yaml restart
+```
+
+### **Stop All Services**
+
+```powershell
+# Stop Backend & Frontend
+# Ctrl+C di masing-masing terminal
+
+# Stop Fabric Network
+cd C:\Blockchain\reservasihotel\network
+docker-compose -f docker-compose-simple.yaml down
+
+# Stop XAMPP
+# XAMPP Control Panel → Stop MySQL & Apache
+```
+
+### **Update Dependencies**
+
+```powershell
+# Update Go modules
+cd C:\Blockchain\reservasihotel\api-gateway
+go get -u ./...
+go mod tidy
+
+# Update npm packages
+cd C:\Blockchain\reservasihotel\web-ui
+npm update
+# or
+npm install <package>@latest
+```
+
+### **View Logs**
+
+```powershell
+# Fabric containers
+docker logs peer0.hotelorg.reservation.com
+docker logs orderer.reservation.com
+
+# All containers
+cd C:\Blockchain\reservasihotel\network
+docker-compose -f docker-compose-simple.yaml logs -f
+
+# Backend logs
+# Check Terminal 2 output
+
+# Frontend logs
+# Check Terminal 3 output & Browser Console (F12)
+```
+
+### **Database Management**
+
+```powershell
+# Backup database
+# phpMyAdmin → Export → Go
+
+# Restore database
+# phpMyAdmin → Import → Choose file
+
+# Clear all reservations
+# phpMyAdmin → Execute SQL:
+# TRUNCATE TABLE reservation_history;
+# TRUNCATE TABLE reservations;
+```
+
+---
+
+## �📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
 For issues and questions:
-1. Check the troubleshooting section
-2. Search existing issues on GitHub
-3. Create new issue with detailed description
-4. Include logs and environment details
+1. ✅ Check the **Troubleshooting** section above
+2. ✅ Read **PANDUAN-LENGKAP.md** for step-by-step guide
+3. ✅ Search existing issues on GitHub
+4. ✅ Create new issue with:
+   - Environment details (OS, Go version, Node version, Docker version)
+   - Error logs (backend, frontend, docker)
+   - Steps to reproduce
+   - Screenshots (jika ada)
+
+## 📚 Additional Documentation
+
+- **QUICKSTART.md** - Quick 3-step setup guide
+- **PANDUAN-LENGKAP.md** - Complete Indonesian guide with screenshots
+- **CHANGELOG.md** - Version history and changes
 
 ## 🙏 Acknowledgments
 
-- Hyperledger Fabric community
-- Go Gin framework
-- React and Vite teams
-- Tailwind CSS team
-- MySQL community
+- [Hyperledger Fabric](https://www.hyperledger.org/use/fabric) - Enterprise blockchain framework
+- [Go Gin](https://gin-gonic.com/) - High-performance HTTP framework
+- [React](https://react.dev/) - UI library
+- [Vite](https://vitejs.dev/) - Next generation frontend tooling
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [GORM](https://gorm.io/) - Go ORM library
+- [MySQL](https://www.mysql.com/) - Relational database
