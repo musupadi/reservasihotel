@@ -1,0 +1,176 @@
+Organizations:
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: ../organizations/ordererOrganizations/reservation.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+
+    - &HotelOrg
+        Name: HotelOrgMSP
+        ID: HotelOrgMSP
+        MSPDir: ../organizations/peerOrganizations/hotelorg.reservation.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('HotelOrgMSP.admin', 'HotelOrgMSP.peer', 'HotelOrgMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('HotelOrgMSP.admin', 'HotelOrgMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('HotelOrgMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('HotelOrgMSP.peer')"
+
+    - &OTAOrg
+        Name: OTAOrgMSP
+        ID: OTAOrgMSP
+        MSPDir: ../organizations/peerOrganizations/otaorg.reservation.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OTAOrgMSP.admin', 'OTAOrgMSP.peer', 'OTAOrgMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OTAOrgMSP.admin', 'OTAOrgMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OTAOrgMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('OTAOrgMSP.peer')"
+
+    - &PaymentOrg
+        Name: PaymentOrgMSP
+        ID: PaymentOrgMSP
+        MSPDir: ../organizations/peerOrganizations/paymentorg.reservation.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('PaymentOrgMSP.admin', 'PaymentOrgMSP.peer', 'PaymentOrgMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('PaymentOrgMSP.admin', 'PaymentOrgMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('PaymentOrgMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('PaymentOrgMSP.peer')"
+
+Capabilities:
+    Channel: &ChannelCapabilities
+        V2_0: true
+
+    Orderer: &OrdererCapabilities
+        V2_0: true
+
+    Application: &ApplicationCapabilities
+        V2_0: true
+
+Application: &ApplicationDefaults
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+    OrdererType: etcdraft
+    Addresses:
+        - orderer.reservation.com:7050
+    EtcdRaft:
+        Consenters:
+        - Host: orderer.reservation.com
+          Port: 7050
+          ClientTLSCert: ../organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/tls/server.crt
+          ServerTLSCert: ../organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/tls/server.crt
+
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    Capabilities:
+        <<: *ChannelCapabilities
+
+Profiles:
+    ThreeOrgsOrdererGenesis:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *HotelOrg
+                    - *OTAOrg
+                    - *PaymentOrg
+
+    ThreeOrgsChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *HotelOrg
+                - *OTAOrg
+                - *PaymentOrg
+            Capabilities:
+                <<: *ApplicationCapabilities
