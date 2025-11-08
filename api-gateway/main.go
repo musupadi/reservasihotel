@@ -186,6 +186,9 @@ func (api *API) setupRoutes() {
 
 	v1 := api.Router.Group("/api/v1")
 	{
+		// Health check endpoint
+		v1.GET("/health", api.getHealthCheck)
+
 		// Hotel routes
 		v1.GET("/hotels", api.getHotels)
 		v1.GET("/hotels/:id", api.getHotel)
@@ -208,6 +211,27 @@ func (api *API) setupRoutes() {
 		v1.POST("/blockchain/switch", api.switchBlockchain)
 		v1.GET("/reservations/:id/history", api.getReservationHistory)
 	}
+}
+
+// Health check handler
+func (api *API) getHealthCheck(c *gin.Context) {
+	blockchainType := "Local Simulation"
+	fabricEnabled := false
+
+	if api.UseFabric && api.Fabric.IsConnected {
+		blockchainType = "Hyperledger Fabric"
+		fabricEnabled = true
+	}
+
+	response := gin.H{
+		"status":         "running",
+		"blockchain":     blockchainType,
+		"fabric_enabled": fabricEnabled,
+		"database":       "MySQL",
+		"timestamp":      time.Now().Format(time.RFC3339),
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // Hotel handlers

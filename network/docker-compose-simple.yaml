@@ -25,6 +25,8 @@ services:
     command: orderer
     volumes:
       - orderer.reservation.com:/var/hyperledger/production/orderer
+      - ./organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/msp:/var/hyperledger/orderer/msp
+      - ./organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/tls:/var/hyperledger/orderer/tls
     ports:
       - 7050:7050
       - 7053:7053

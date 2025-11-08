@@ -26,6 +26,11 @@ go run main.go blockchain.go fabric_client.go
 # Wait for: "Listening and serving HTTP on :8080"
 ```
 
+**📌 Note:** 
+- Command `go run main.go blockchain.go fabric_client.go` akan compile **semua 3 file Go** sekaligus
+- **TIDAK perlu** buka file `main.go`, `blockchain.go`, atau `fabric_client.go` secara manual
+- Go akan otomatis compile dan run semua dependencies
+
 ### **Terminal 3: Start React Frontend**
 ```powershell
 cd C:\Blockchain\reservasihotel\web-ui
@@ -92,10 +97,24 @@ docker-compose -f docker-compose-simple.yaml up -d
 ### Backend Shows Offline?
 ```powershell
 # Test backend
-curl http://localhost:8080/api/v1/blockchain/stats
+curl http://localhost:8080/api/v1/health
 
 # Clear browser cache (Ctrl+Shift+Delete)
 # Restart backend
+```
+
+### Blockchain History Shows "No blockchain history available"?
+```
+This is NORMAL in development mode!
+
+Blockchain history is currently using MOCK data because:
+- Real chaincode not yet deployed to Fabric network
+- System using development/simulation mode
+
+To fix:
+1. Restart backend to load latest code
+2. Blockchain history will show mock transactions
+3. For REAL blockchain data, deploy chaincode (advanced)
 ```
 
 ---

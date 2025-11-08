@@ -303,7 +303,7 @@ export const blockchainService = {
   },
   getHealthCheck: async () => {
     try {
-      const response = await api.get('/')
+      const response = await api.get('/health')
       return response
     } catch (error) {
       console.warn('Health check failed')
