@@ -44,10 +44,11 @@ func (fc *FabricClient) Initialize() error {
 }
 
 // CreateReservation creates a new reservation on the blockchain
-func (fc *FabricClient) CreateReservation(reservationID, hotelID, roomTypeID, checkIn, checkOut string, guestCount int, customerRef string, price float64, currency string) error {
+func (fc *FabricClient) CreateReservation(reservationID, hotelID, roomTypeID, checkIn, checkOut string, guestCount int, eventType, eventDescription, customerName, customerPhone, customerEmail, customerRef string, pricePerPerson, totalPrice float64, currency string) error {
 	if fc.Contract == nil {
 		// Mock implementation for development
-		fmt.Printf("Mock: Creating reservation %s for hotel %s\n", reservationID, hotelID)
+		fmt.Printf("Mock: Creating reservation %s for hotel %s - Event: %s, Guests: %d, Total: %.2f\n",
+			reservationID, hotelID, eventType, guestCount, totalPrice)
 		return nil
 	}
 
@@ -59,8 +60,14 @@ func (fc *FabricClient) CreateReservation(reservationID, hotelID, roomTypeID, ch
 		checkIn,
 		checkOut,
 		strconv.Itoa(guestCount),
+		eventType,
+		eventDescription,
+		customerName,
+		customerPhone,
+		customerEmail,
 		customerRef,
-		fmt.Sprintf("%.2f", price),
+		fmt.Sprintf("%.2f", pricePerPerson),
+		fmt.Sprintf("%.2f", totalPrice),
 		currency,
 	)
 	return err
@@ -69,20 +76,26 @@ func (fc *FabricClient) CreateReservation(reservationID, hotelID, roomTypeID, ch
 // GetReservation retrieves a reservation from the blockchain
 func (fc *FabricClient) GetReservation(reservationID string) (map[string]interface{}, error) {
 	if fc.Contract == nil {
-		// Mock implementation for development
+		// Mock implementation for development with new structure
 		return map[string]interface{}{
-			"reservationID": reservationID,
-			"hotelID":       "1",
-			"roomTypeID":    "1",
-			"checkIn":       "2024-01-15",
-			"checkOut":      "2024-01-17",
-			"guestCount":    2,
-			"customerRef":   "CUST001",
-			"price":         500000,
-			"currency":      "IDR",
-			"status":        "PENDING",
-			"createdByOrg":  "OTAOrgMSP",
-			"lastUpdatedAt": "2024-01-10T10:00:00Z",
+			"reservationID":    reservationID,
+			"hotelID":          "1",
+			"roomTypeID":       "1",
+			"checkIn":          "2024-01-15",
+			"checkOut":         "2024-01-17",
+			"guestCount":       50,
+			"eventType":        "Meeting",
+			"eventDescription": "Corporate meeting",
+			"customerName":     "Mock Customer",
+			"customerPhone":    "08123456789",
+			"customerEmail":    "mock@email.com",
+			"customerRef":      "CUST001",
+			"pricePerPerson":   1000000,
+			"totalPrice":       50000000,
+			"currency":         "IDR",
+			"status":           "PENDING",
+			"createdByOrg":     "OTAOrgMSP",
+			"lastUpdatedAt":    "2024-01-10T10:00:00Z",
 		}, nil
 	}
 
@@ -151,21 +164,27 @@ func (fc *FabricClient) CheckOut(reservationID, note string) error {
 // QueryAllReservations queries all reservations
 func (fc *FabricClient) QueryAllReservations() ([]map[string]interface{}, error) {
 	if fc.Contract == nil {
-		// Mock implementation for development
+		// Mock implementation for development with new structure
 		return []map[string]interface{}{
 			{
-				"reservationID": "RES001",
-				"hotelID":       "1",
-				"roomTypeID":    "1",
-				"checkIn":       "2024-01-15",
-				"checkOut":      "2024-01-17",
-				"guestCount":    2,
-				"customerRef":   "CUST001",
-				"price":         500000,
-				"currency":      "IDR",
-				"status":        "CONFIRMED",
-				"createdByOrg":  "OTAOrgMSP",
-				"lastUpdatedAt": "2024-01-10T10:00:00Z",
+				"reservationID":    "RES001",
+				"hotelID":          "1",
+				"roomTypeID":       "1",
+				"checkIn":          "2024-01-15",
+				"checkOut":         "2024-01-17",
+				"guestCount":       50,
+				"eventType":        "Corporate Meeting",
+				"eventDescription": "Quarterly business review",
+				"customerName":     "PT. Example Corp",
+				"customerPhone":    "08123456789",
+				"customerEmail":    "contact@example.com",
+				"customerRef":      "CUST001",
+				"pricePerPerson":   1500000,
+				"totalPrice":       75000000,
+				"currency":         "IDR",
+				"status":           "CONFIRMED",
+				"createdByOrg":     "OTAOrgMSP",
+				"lastUpdatedAt":    "2024-01-10T10:00:00Z",
 			},
 		}, nil
 	}

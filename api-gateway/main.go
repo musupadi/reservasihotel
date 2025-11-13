@@ -10,10 +10,28 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
+
+// User represents a user in the system
+type User struct {
+	ID            int       `json:"id" gorm:"primaryKey;column:id"`
+	Email         string    `json:"email" gorm:"column:email;unique"`
+	Password      string    `json:"-" gorm:"column:password"`
+	FullName      string    `json:"full_name" gorm:"column:full_name"`
+	Phone         string    `json:"phone" gorm:"column:phone"`
+	Company       string    `json:"company" gorm:"column:company"`
+	Role          string    `json:"role" gorm:"column:role;default:'user'"`
+	IsActive      bool      `json:"is_active" gorm:"column:is_active;default:true"`
+	EmailVerified bool      `json:"email_verified" gorm:"column:email_verified;default:false"`
+	LastLogin     time.Time `json:"last_login" gorm:"column:last_login"`
+	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt     time.Time `json:"updated_at" gorm:"column:updated_at"`
+}
 
 // Hotel represents a hotel in the database - MATCH Node.js structure
 type Hotel struct {
@@ -23,54 +41,68 @@ type Hotel struct {
 	City        string    `json:"city" gorm:"column:city"`
 	Country     string    `json:"country" gorm:"column:country"`
 	Description string    `json:"description" gorm:"column:description"`
-	Rating      int       `json:"rating" gorm:"column:rating"`
+	Rating      float64   `json:"rating" gorm:"column:rating"`
 	ImageURL    string    `json:"image_url" gorm:"column:image_url"`
 	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at"`
 	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
 
-// RoomType represents a room type - MATCH Node.js structure
+// RoomType represents a room type - UPDATED untuk Meeting Package
 type RoomType struct {
-	ID          int       `json:"id" gorm:"primaryKey;column:id"`
-	HotelID     int       `json:"hotel_id" gorm:"column:hotel_id"`
-	TypeName    string    `json:"type_name" gorm:"column:type_name"`
-	Description string    `json:"description" gorm:"column:description"`
-	MaxGuests   int       `json:"max_guests" gorm:"column:max_guests"`
-	BasePrice   float64   `json:"base_price" gorm:"column:base_price"`
-	Currency    string    `json:"currency" gorm:"column:currency"`
-	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at"`
-	Hotel       Hotel     `json:"hotel" gorm:"foreignKey:HotelID"`
+	ID             int       `json:"id" gorm:"primaryKey;column:id"`
+	HotelID        int       `json:"hotel_id" gorm:"column:hotel_id"`
+	TypeName       string    `json:"type_name" gorm:"column:type_name"`
+	Description    string    `json:"description" gorm:"column:description"`
+	PricePerPerson float64   `json:"price_per_person" gorm:"column:price_per_person"`
+	MinCapacity    int       `json:"min_capacity" gorm:"column:min_capacity"`
+	MaxCapacity    int       `json:"max_capacity" gorm:"column:max_capacity"`
+	AvailableRooms int       `json:"available_rooms" gorm:"column:available_rooms"`
+	Amenities      string    `json:"amenities" gorm:"column:amenities"`
+	CreatedAt      time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt      time.Time `json:"updated_at" gorm:"column:updated_at"`
+	Hotel          Hotel     `json:"hotel" gorm:"foreignKey:HotelID"`
 }
 
-// Reservation represents a reservation - MATCH Node.js structure
+// Reservation represents a reservation - UPDATED untuk Event Booking
 type Reservation struct {
-	ID            int       `json:"id" gorm:"primaryKey;column:id"`
-	ReservationID string    `json:"reservation_id" gorm:"column:reservation_id"`
-	HotelID       int       `json:"hotel_id" gorm:"column:hotel_id"`
-	RoomTypeID    int       `json:"room_type_id" gorm:"column:room_type_id"`
-	CheckIn       time.Time `json:"check_in" gorm:"column:check_in"`
-	CheckOut      time.Time `json:"check_out" gorm:"column:check_out"`
-	GuestCount    int       `json:"guest_count" gorm:"column:guest_count"`
-	CustomerRef   string    `json:"customer_ref" gorm:"column:customer_ref"`
-	Price         float64   `json:"price" gorm:"column:price"`
-	Currency      string    `json:"currency" gorm:"column:currency"`
-	Status        string    `json:"status" gorm:"column:status"`
-	CreatedByOrg  string    `json:"created_by_org" gorm:"column:created_by_org"`
-	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt     time.Time `json:"updated_at" gorm:"column:updated_at"`
-	Hotel         Hotel     `json:"hotel" gorm:"foreignKey:HotelID"`
-	RoomType      RoomType  `json:"room_type" gorm:"foreignKey:RoomTypeID"`
+	ID               int       `json:"id" gorm:"primaryKey;column:id"`
+	UserID           *int      `json:"user_id" gorm:"column:user_id"`
+	ReservationID    string    `json:"reservation_id" gorm:"column:reservation_id"`
+	HotelID          int       `json:"hotel_id" gorm:"column:hotel_id"`
+	RoomTypeID       int       `json:"room_type_id" gorm:"column:room_type_id"`
+	CheckIn          time.Time `json:"check_in" gorm:"column:check_in"`
+	CheckOut         time.Time `json:"check_out" gorm:"column:check_out"`
+	GuestCount       int       `json:"guest_count" gorm:"column:guest_count"`
+	EventType        string    `json:"event_type" gorm:"column:event_type"`
+	EventDescription string    `json:"event_description" gorm:"column:event_description"`
+	CustomerName     string    `json:"customer_name" gorm:"column:customer_name"`
+	CustomerPhone    string    `json:"customer_phone" gorm:"column:customer_phone"`
+	CustomerEmail    string    `json:"customer_email" gorm:"column:customer_email"`
+	CustomerRef      string    `json:"customer_ref" gorm:"column:customer_ref"`
+	PricePerPerson   float64   `json:"price_per_person" gorm:"column:price_per_person"`
+	TotalPrice       float64   `json:"total_price" gorm:"column:total_price"`
+	Currency         string    `json:"currency" gorm:"column:currency"`
+	Status           string    `json:"status" gorm:"column:status"`
+	CreatedByOrg     string    `json:"created_by_org" gorm:"column:created_by_org"`
+	CreatedAt        time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt        time.Time `json:"updated_at" gorm:"column:updated_at"`
+	Hotel            Hotel     `json:"hotel" gorm:"foreignKey:HotelID"`
+	RoomType         RoomType  `json:"room_type" gorm:"foreignKey:RoomTypeID"`
 }
 
 // ReservationHistory represents reservation history events
 type ReservationHistory struct {
 	ID            int       `json:"id" gorm:"primaryKey;column:id"`
 	ReservationID string    `json:"reservation_id" gorm:"column:reservation_id"`
-	EventType     string    `json:"event_type" gorm:"column:event_type"`
-	ActorMSP      string    `json:"actor_msp" gorm:"column:actor_msp"`
+	Action        string    `json:"action" gorm:"column:action"` // CREATED, CONFIRMED, CANCELLED, etc
+	Status        string    `json:"status" gorm:"column:status"` // New status after action
 	Note          string    `json:"note" gorm:"column:note"`
-	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
+	PerformedBy   string    `json:"performed_by" gorm:"column:performed_by"` // MSP or user
+	PerformedAt   time.Time `json:"performed_at" gorm:"column:performed_at"`
+}
+
+func (ReservationHistory) TableName() string {
+	return "reservation_history"
 }
 
 // API represents the API server with hybrid blockchain support
@@ -114,11 +146,16 @@ func NewAPI() *API {
 	// Add CORS middleware - Allow all origins for development
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{
-		"http://localhost:3000",
-		"http://localhost:5173",
+		"http://localhost:3000", // React frontend (web-ui)
+		"http://localhost:3001", // Next.js frontend (frontend-nextjs)
+		"http://localhost:5173", // Vite dev server
+		"http://localhost:4000", // Alternative port
 		"http://127.0.0.1:3000",
+		"http://127.0.0.1:3001",
 		"http://127.0.0.1:5173",
 		"http://[::1]:3000",
+		"http://your-frontend-domain.com",  // Frontend production
+		"https://your-frontend-domain.com", // HTTPS
 	}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"}
@@ -189,15 +226,26 @@ func (api *API) setupRoutes() {
 		// Health check endpoint
 		v1.GET("/health", api.getHealthCheck)
 
+		// Auth routes
+		v1.POST("/auth/register", api.register)
+		v1.POST("/auth/login", api.login)
+		v1.GET("/auth/me", api.authMiddleware(), api.getMe)
+		v1.PUT("/auth/profile", api.authMiddleware(), api.updateProfile)
+
 		// Hotel routes
 		v1.GET("/hotels", api.getHotels)
 		v1.GET("/hotels/:id", api.getHotel)
 		v1.GET("/hotels/:id/rooms", api.getHotelRooms)
+		v1.GET("/hotels/:id/room-types", api.getHotelRooms) // Alias for frontend compatibility
+
+		// Price calculation endpoint - NEW!
+		v1.POST("/calculate-price", api.calculatePrice)
 
 		// Reservation routes
-		v1.POST("/reservations", api.createReservation)
+		v1.POST("/reservations", api.optionalAuthMiddleware(), api.createReservation)
 		v1.GET("/reservations", api.getReservations)
 		v1.GET("/reservations/:id", api.getReservation)
+		v1.GET("/reservations/user/my-bookings", api.authMiddleware(), api.getUserReservations)
 		v1.POST("/reservations/:id/confirm", api.confirmReservation)
 		v1.POST("/reservations/:id/cancel", api.cancelReservation)
 		v1.POST("/reservations/:id/checkin", api.checkinReservation)
@@ -268,18 +316,90 @@ func (api *API) getHotelRooms(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"room_types": roomTypes})
 }
 
+// calculatePrice - NEW! Endpoint untuk simulasi kalkulasi harga
+func (api *API) calculatePrice(c *gin.Context) {
+	var req struct {
+		RoomTypeID int    `json:"room_type_id" binding:"required"`
+		GuestCount int    `json:"guest_count" binding:"required"`
+		CheckIn    string `json:"check_in"`
+		CheckOut   string `json:"check_out"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// Get room type details
+	var roomType RoomType
+	if err := api.DB.Preload("Hotel").First(&roomType, req.RoomTypeID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Room type not found"})
+		return
+	}
+
+	// Validate capacity
+	if req.GuestCount < roomType.MinCapacity {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Minimum capacity is %d guests", roomType.MinCapacity),
+		})
+		return
+	}
+
+	if req.GuestCount > roomType.MaxCapacity {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Maximum capacity is %d guests", roomType.MaxCapacity),
+		})
+		return
+	}
+
+	// Calculate duration in days
+	durationDays := 1 // Default 1 day
+	if req.CheckIn != "" && req.CheckOut != "" {
+		checkIn, errIn := time.Parse("2006-01-02", req.CheckIn)
+		checkOut, errOut := time.Parse("2006-01-02", req.CheckOut)
+		if errIn == nil && errOut == nil {
+			duration := checkOut.Sub(checkIn)
+			durationDays = int(duration.Hours() / 24)
+			if durationDays < 1 {
+				durationDays = 1
+			}
+		}
+	}
+
+	// Calculate prices
+	basePrice := float64(req.GuestCount) * roomType.PricePerPerson
+	totalPrice := basePrice * float64(durationDays)
+
+	c.JSON(http.StatusOK, gin.H{
+		"calculation": gin.H{
+			"price_per_person": roomType.PricePerPerson,
+			"guest_count":      req.GuestCount,
+			"base_price":       basePrice,
+			"duration_days":    durationDays,
+			"total_price":      totalPrice,
+			"currency":         "IDR",
+		},
+		"hotel_name": roomType.Hotel.Name,
+		"hotel_city": roomType.Hotel.City,
+		"room_type":  roomType.TypeName,
+	})
+}
+
 // Reservation handlers with hybrid blockchain support
 func (api *API) createReservation(c *gin.Context) {
 	var req struct {
-		ReservationID string  `json:"reservation_id"`
-		HotelID       string  `json:"hotel_id"`
-		RoomTypeID    string  `json:"room_type_id"`
-		CheckIn       string  `json:"check_in"`
-		CheckOut      string  `json:"check_out"`
-		GuestCount    int     `json:"guest_count"`
-		CustomerRef   string  `json:"customer_ref"`
-		Price         float64 `json:"price"`
-		Currency      string  `json:"currency"`
+		ReservationID    string `json:"reservation_id"`
+		HotelID          string `json:"hotel_id"`
+		RoomTypeID       string `json:"room_type_id"`
+		CheckIn          string `json:"check_in"`
+		CheckOut         string `json:"check_out"`
+		GuestCount       int    `json:"guest_count"`
+		EventType        string `json:"event_type"`        // NEW: Birthday, Meeting, Wedding, dll
+		EventDescription string `json:"event_description"` // NEW: Detail acara
+		CustomerName     string `json:"customer_name"`     // NEW
+		CustomerPhone    string `json:"customer_phone"`    // NEW
+		CustomerEmail    string `json:"customer_email"`    // NEW
+		CustomerRef      string `json:"customer_ref"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -311,19 +431,66 @@ func (api *API) createReservation(c *gin.Context) {
 	hotelID, _ := strconv.Atoi(req.HotelID)
 	roomTypeID, _ := strconv.Atoi(req.RoomTypeID)
 
+	// Get user ID from JWT if authenticated (optional)
+	var userID *int
+	if id, exists := c.Get("user_id"); exists {
+		if uid, ok := id.(int); ok {
+			userID = &uid
+		}
+	}
+
+	// Get room type for price calculation
+	var roomType RoomType
+	if err := api.DB.First(&roomType, roomTypeID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Room type not found"})
+		return
+	}
+
+	// Validate capacity
+	if req.GuestCount < roomType.MinCapacity {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Minimum capacity for this package is %d guests", roomType.MinCapacity),
+		})
+		return
+	}
+
+	if req.GuestCount > roomType.MaxCapacity {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Maximum capacity for this package is %d guests", roomType.MaxCapacity),
+		})
+		return
+	}
+
+	// AUTO CALCULATE PRICE!
+	pricePerPerson := roomType.PricePerPerson
+	totalPrice := float64(req.GuestCount) * pricePerPerson
+
+	// Default event type
+	eventType := req.EventType
+	if eventType == "" {
+		eventType = "Meeting"
+	}
+
 	// Create reservation in database
 	reservation := Reservation{
-		ReservationID: req.ReservationID,
-		HotelID:       hotelID,
-		RoomTypeID:    roomTypeID,
-		CheckIn:       checkIn,
-		CheckOut:      checkOut,
-		GuestCount:    req.GuestCount,
-		CustomerRef:   req.CustomerRef,
-		Price:         req.Price,
-		Currency:      req.Currency,
-		Status:        "PENDING",
-		CreatedByOrg:  "GoBackendMSP",
+		ReservationID:    req.ReservationID,
+		HotelID:          hotelID,
+		RoomTypeID:       roomTypeID,
+		UserID:           userID, // Set user ID if authenticated
+		CheckIn:          checkIn,
+		CheckOut:         checkOut,
+		GuestCount:       req.GuestCount,
+		EventType:        eventType,
+		EventDescription: req.EventDescription,
+		CustomerName:     req.CustomerName,
+		CustomerPhone:    req.CustomerPhone,
+		CustomerEmail:    req.CustomerEmail,
+		CustomerRef:      req.CustomerRef,
+		PricePerPerson:   pricePerPerson,
+		TotalPrice:       totalPrice,
+		Currency:         "IDR",
+		Status:           "PENDING",
+		CreatedByOrg:     "GoBackendMSP",
 	}
 
 	if err := api.DB.Create(&reservation).Error; err != nil {
@@ -336,27 +503,32 @@ func (api *API) createReservation(c *gin.Context) {
 	var blockchainErr error
 
 	if api.UseFabric {
-		// Use real Hyperledger Fabric
+		// Use real Hyperledger Fabric with complete data
 		blockchainErr = api.Fabric.CreateReservation(
 			req.ReservationID, req.HotelID, req.RoomTypeID,
 			req.CheckIn, req.CheckOut, req.GuestCount,
-			req.CustomerRef, req.Price, req.Currency,
+			eventType, req.EventDescription,
+			req.CustomerName, req.CustomerPhone, req.CustomerEmail, req.CustomerRef,
+			pricePerPerson, totalPrice, "IDR",
 		)
 		blockchainType = "Hyperledger Fabric"
 	} else {
 		// Use local blockchain simulation
 		blockchainData := map[string]interface{}{
-			"reservation_id": req.ReservationID,
-			"hotel_id":       req.HotelID,
-			"room_type_id":   req.RoomTypeID,
-			"check_in":       req.CheckIn,
-			"check_out":      req.CheckOut,
-			"guest_count":    req.GuestCount,
-			"customer_ref":   req.CustomerRef,
-			"price":          req.Price,
-			"currency":       req.Currency,
-			"status":         "PENDING",
-			"created_by":     "GoBackendMSP",
+			"reservation_id":    req.ReservationID,
+			"hotel_id":          req.HotelID,
+			"room_type_id":      req.RoomTypeID,
+			"check_in":          req.CheckIn,
+			"check_out":         req.CheckOut,
+			"guest_count":       req.GuestCount,
+			"event_type":        eventType,
+			"event_description": req.EventDescription,
+			"customer_ref":      req.CustomerRef,
+			"price_per_person":  pricePerPerson,
+			"total_price":       totalPrice,
+			"currency":          "IDR",
+			"status":            "PENDING",
+			"created_by":        "GoBackendMSP",
 		}
 		api.Blockchain.CreateReservationTx(blockchainData)
 		blockchainType = "Local Simulation"
@@ -366,10 +538,36 @@ func (api *API) createReservation(c *gin.Context) {
 	api.createHistoryEvent(req.ReservationID, "CREATED",
 		fmt.Sprintf("Reservation created via Go backend with %s", blockchainType))
 
+	// Prepare response with calculation details
 	response := gin.H{
 		"message":        "Reservation created successfully on blockchain",
 		"reservation_id": req.ReservationID,
 		"blockchain":     blockchainType,
+		"reservation": gin.H{
+			"reservation_id":    req.ReservationID,
+			"hotel_id":          req.HotelID,
+			"room_type_id":      req.RoomTypeID,
+			"check_in":          req.CheckIn,
+			"check_out":         req.CheckOut,
+			"guest_count":       req.GuestCount,
+			"event_type":        eventType,
+			"event_description": req.EventDescription,
+			"customer_name":     req.CustomerName,
+			"customer_phone":    req.CustomerPhone,
+			"customer_email":    req.CustomerEmail,
+			"price_per_person":  pricePerPerson,
+			"total_price":       totalPrice,
+			"currency":          "IDR",
+			"status":            "PENDING",
+		},
+		"calculation": gin.H{
+			"formula": fmt.Sprintf("%d guests × Rp %.0f = Rp %.0f", req.GuestCount, pricePerPerson, totalPrice),
+			"breakdown": gin.H{
+				"price_per_person": pricePerPerson,
+				"guest_count":      req.GuestCount,
+				"total":            totalPrice,
+			},
+		},
 	}
 
 	if blockchainErr != nil {
@@ -398,20 +596,26 @@ func (api *API) getReservations(c *gin.Context) {
 	var formattedReservations []map[string]interface{}
 	for _, r := range reservations {
 		formattedReservations = append(formattedReservations, map[string]interface{}{
-			"reservationID": r.ReservationID,
-			"hotelID":       fmt.Sprintf("%d", r.HotelID),
-			"roomTypeID":    fmt.Sprintf("%d", r.RoomTypeID),
-			"checkIn":       r.CheckIn.Format("2006-01-02"),
-			"checkOut":      r.CheckOut.Format("2006-01-02"),
-			"guestCount":    r.GuestCount,
-			"customerRef":   r.CustomerRef,
-			"price":         r.Price,
-			"currency":      r.Currency,
-			"status":        r.Status,
-			"createdByOrg":  r.CreatedByOrg,
-			"lastUpdatedAt": r.UpdatedAt,
-			"hotelName":     r.Hotel.Name,
-			"roomTypeName":  r.RoomType.TypeName,
+			"reservationID":    r.ReservationID,
+			"hotelID":          fmt.Sprintf("%d", r.HotelID),
+			"roomTypeID":       fmt.Sprintf("%d", r.RoomTypeID),
+			"checkIn":          r.CheckIn.Format("2006-01-02"),
+			"checkOut":         r.CheckOut.Format("2006-01-02"),
+			"guestCount":       r.GuestCount,
+			"eventType":        r.EventType,
+			"eventDescription": r.EventDescription,
+			"customerName":     r.CustomerName,
+			"customerPhone":    r.CustomerPhone,
+			"customerEmail":    r.CustomerEmail,
+			"customerRef":      r.CustomerRef,
+			"pricePerPerson":   r.PricePerPerson,
+			"totalPrice":       r.TotalPrice,
+			"currency":         r.Currency,
+			"status":           r.Status,
+			"createdByOrg":     r.CreatedByOrg,
+			"lastUpdatedAt":    r.UpdatedAt,
+			"hotelName":        r.Hotel.Name,
+			"roomTypeName":     r.RoomType.TypeName,
 		})
 	}
 
@@ -433,23 +637,89 @@ func (api *API) getReservation(c *gin.Context) {
 
 	// Format response
 	formattedReservation := map[string]interface{}{
-		"reservationID": reservation.ReservationID,
-		"hotelID":       fmt.Sprintf("%d", reservation.HotelID),
-		"roomTypeID":    fmt.Sprintf("%d", reservation.RoomTypeID),
-		"checkIn":       reservation.CheckIn.Format("2006-01-02"),
-		"checkOut":      reservation.CheckOut.Format("2006-01-02"),
-		"guestCount":    reservation.GuestCount,
-		"customerRef":   reservation.CustomerRef,
-		"price":         reservation.Price,
-		"currency":      reservation.Currency,
-		"status":        reservation.Status,
-		"createdByOrg":  reservation.CreatedByOrg,
-		"lastUpdatedAt": reservation.UpdatedAt,
-		"hotelName":     reservation.Hotel.Name,
-		"roomTypeName":  reservation.RoomType.TypeName,
+		"reservation_id":    reservation.ReservationID,
+		"hotel_id":          reservation.HotelID,
+		"room_type_id":      reservation.RoomTypeID,
+		"check_in":          reservation.CheckIn.Format("2006-01-02"),
+		"check_out":         reservation.CheckOut.Format("2006-01-02"),
+		"guest_count":       reservation.GuestCount,
+		"event_type":        reservation.EventType,
+		"event_description": reservation.EventDescription,
+		"customer_name":     reservation.CustomerName,
+		"customer_phone":    reservation.CustomerPhone,
+		"customer_email":    reservation.CustomerEmail,
+		"customer_ref":      reservation.CustomerRef,
+		"price_per_person":  reservation.PricePerPerson,
+		"total_price":       reservation.TotalPrice,
+		"currency":          reservation.Currency,
+		"status":            reservation.Status,
+		"created_by_org":    reservation.CreatedByOrg,
+		"created_at":        reservation.CreatedAt,
+		"updated_at":        reservation.UpdatedAt,
+		"hotel": map[string]interface{}{
+			"id":      reservation.Hotel.ID,
+			"name":    reservation.Hotel.Name,
+			"city":    reservation.Hotel.City,
+			"address": reservation.Hotel.Address,
+		},
+		"room_type": map[string]interface{}{
+			"id":          reservation.RoomType.ID,
+			"type_name":   reservation.RoomType.TypeName,
+			"description": reservation.RoomType.Description,
+		},
 	}
 
 	c.JSON(http.StatusOK, gin.H{"reservation": formattedReservation})
+}
+
+// Get user's reservations (authenticated)
+func (api *API) getUserReservations(c *gin.Context) {
+	userID := c.GetInt("user_id")
+
+	var reservations []Reservation
+	if err := api.DB.Preload("Hotel").Preload("RoomType").Where("user_id = ?", userID).Order("created_at DESC").Find(&reservations).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reservations"})
+		return
+	}
+
+	// Format reservations
+	var formattedReservations []map[string]interface{}
+	for _, reservation := range reservations {
+		formattedReservations = append(formattedReservations, map[string]interface{}{
+			"id":                reservation.ID,
+			"reservation_id":    reservation.ReservationID,
+			"hotel_id":          reservation.HotelID,
+			"room_type_id":      reservation.RoomTypeID,
+			"check_in":          reservation.CheckIn.Format("2006-01-02"),
+			"check_out":         reservation.CheckOut.Format("2006-01-02"),
+			"guest_count":       reservation.GuestCount,
+			"event_type":        reservation.EventType,
+			"event_description": reservation.EventDescription,
+			"price_per_person":  reservation.PricePerPerson,
+			"total_price":       reservation.TotalPrice,
+			"currency":          reservation.Currency,
+			"status":            reservation.Status,
+			"created_at":        reservation.CreatedAt,
+			"updated_at":        reservation.UpdatedAt,
+			"hotel": map[string]interface{}{
+				"id":      reservation.Hotel.ID,
+				"name":    reservation.Hotel.Name,
+				"city":    reservation.Hotel.City,
+				"address": reservation.Hotel.Address,
+				"rating":  reservation.Hotel.Rating,
+			},
+			"room_type": map[string]interface{}{
+				"id":          reservation.RoomType.ID,
+				"type_name":   reservation.RoomType.TypeName,
+				"description": reservation.RoomType.Description,
+			},
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"reservations": formattedReservations,
+		"total":        len(formattedReservations),
+	})
 }
 
 func (api *API) confirmReservation(c *gin.Context) {
@@ -562,20 +832,26 @@ func (api *API) getHotelReservations(c *gin.Context) {
 	var formattedReservations []map[string]interface{}
 	for _, r := range reservations {
 		formattedReservations = append(formattedReservations, map[string]interface{}{
-			"reservationID": r.ReservationID,
-			"hotelID":       fmt.Sprintf("%d", r.HotelID),
-			"roomTypeID":    fmt.Sprintf("%d", r.RoomTypeID),
-			"checkIn":       r.CheckIn.Format("2006-01-02"),
-			"checkOut":      r.CheckOut.Format("2006-01-02"),
-			"guestCount":    r.GuestCount,
-			"customerRef":   r.CustomerRef,
-			"price":         r.Price,
-			"currency":      r.Currency,
-			"status":        r.Status,
-			"createdByOrg":  r.CreatedByOrg,
-			"lastUpdatedAt": r.UpdatedAt,
-			"hotelName":     r.Hotel.Name,
-			"roomTypeName":  r.RoomType.TypeName,
+			"reservationID":    r.ReservationID,
+			"hotelID":          fmt.Sprintf("%d", r.HotelID),
+			"roomTypeID":       fmt.Sprintf("%d", r.RoomTypeID),
+			"checkIn":          r.CheckIn.Format("2006-01-02"),
+			"checkOut":         r.CheckOut.Format("2006-01-02"),
+			"guestCount":       r.GuestCount,
+			"eventType":        r.EventType,
+			"eventDescription": r.EventDescription,
+			"customerName":     r.CustomerName,
+			"customerPhone":    r.CustomerPhone,
+			"customerEmail":    r.CustomerEmail,
+			"customerRef":      r.CustomerRef,
+			"pricePerPerson":   r.PricePerPerson,
+			"totalPrice":       r.TotalPrice,
+			"currency":         r.Currency,
+			"status":           r.Status,
+			"createdByOrg":     r.CreatedByOrg,
+			"lastUpdatedAt":    r.UpdatedAt,
+			"hotelName":        r.Hotel.Name,
+			"roomTypeName":     r.RoomType.TypeName,
 		})
 	}
 
@@ -727,12 +1003,20 @@ func (api *API) getReservationHistory(c *gin.Context) {
 }
 
 // Helper functions
-func (api *API) createHistoryEvent(reservationID, eventType, note string) {
+func (api *API) createHistoryEvent(reservationID, action, note string) {
+	// Get current reservation status
+	var reservation Reservation
+	status := "PENDING" // default
+	if err := api.DB.Where("reservation_id = ?", reservationID).First(&reservation).Error; err == nil {
+		status = reservation.Status
+	}
+
 	history := ReservationHistory{
 		ReservationID: reservationID,
-		EventType:     eventType,
-		ActorMSP:      "GoBackendMSP",
+		Action:        action,
+		Status:        status,
 		Note:          note,
+		PerformedBy:   "GoBackendMSP",
 	}
 	api.DB.Create(&history)
 }
@@ -799,6 +1083,300 @@ func initDB() *gorm.DB {
 	}
 
 	return db
+}
+
+// JWT Secret key - In production, use environment variable
+var jwtSecret = []byte(getEnv("JWT_SECRET", "your-super-secret-key-change-this-in-production"))
+
+// JWT Claims
+type Claims struct {
+	UserID int    `json:"user_id"`
+	Email  string `json:"email"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+// Auth Middleware
+func (api *API) authMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			c.Abort()
+			return
+		}
+
+		tokenString := authHeader
+		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			tokenString = authHeader[7:]
+		}
+
+		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+			return jwtSecret, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		claims, ok := token.Claims.(*Claims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Set("user_email", claims.Email)
+		c.Set("user_role", claims.Role)
+		c.Next()
+	}
+}
+
+// Optional auth middleware - allows requests with or without token
+func (api *API) optionalAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader != "" {
+			tokenString := authHeader
+			if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+				tokenString = authHeader[7:]
+			}
+
+			token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+				return jwtSecret, nil
+			})
+
+			if err == nil && token.Valid {
+				claims, ok := token.Claims.(*Claims)
+				if ok {
+					c.Set("user_id", claims.UserID)
+					c.Set("user_email", claims.Email)
+					c.Set("user_role", claims.Role)
+				}
+			}
+		}
+		c.Next()
+	}
+}
+
+// Register handler
+func (api *API) register(c *gin.Context) {
+	var req struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required,min=6"`
+		FullName string `json:"full_name" binding:"required"`
+		Phone    string `json:"phone"`
+		Company  string `json:"company"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// Check if email already exists
+	var existingUser User
+	if err := api.DB.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered"})
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	// Create user
+	user := User{
+		Email:    req.Email,
+		Password: string(hashedPassword),
+		FullName: req.FullName,
+		Phone:    req.Phone,
+		Company:  req.Company,
+		Role:     "user",
+		IsActive: true,
+	}
+
+	if err := api.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
+
+	// Generate JWT token
+	expirationTime := time.Now().Add(24 * time.Hour * 7) // 7 days
+	claims := &Claims{
+		UserID: user.ID,
+		Email:  user.Email,
+		Role:   user.Role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "User registered successfully",
+		"token":   tokenString,
+		"user": gin.H{
+			"id":        user.ID,
+			"email":     user.Email,
+			"full_name": user.FullName,
+			"phone":     user.Phone,
+			"company":   user.Company,
+			"role":      user.Role,
+		},
+	})
+}
+
+// Login handler
+func (api *API) login(c *gin.Context) {
+	var req struct {
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// Find user
+	var user User
+	if err := api.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	// Check if user is active
+	if !user.IsActive {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Account is inactive"})
+		return
+	}
+
+	// Verify password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	// Update last login
+	api.DB.Model(&user).Update("last_login", time.Now())
+
+	// Generate JWT token
+	expirationTime := time.Now().Add(24 * time.Hour * 7) // 7 days
+	claims := &Claims{
+		UserID: user.ID,
+		Email:  user.Email,
+		Role:   user.Role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token":   tokenString,
+		"user": gin.H{
+			"id":        user.ID,
+			"email":     user.Email,
+			"full_name": user.FullName,
+			"phone":     user.Phone,
+			"company":   user.Company,
+			"role":      user.Role,
+		},
+	})
+}
+
+// Get current user profile
+func (api *API) getMe(c *gin.Context) {
+	userID := c.GetInt("user_id")
+
+	var user User
+	if err := api.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user": gin.H{
+			"id":         user.ID,
+			"email":      user.Email,
+			"full_name":  user.FullName,
+			"phone":      user.Phone,
+			"company":    user.Company,
+			"role":       user.Role,
+			"created_at": user.CreatedAt,
+		},
+	})
+}
+
+// Update user profile
+func (api *API) updateProfile(c *gin.Context) {
+	userID := c.GetInt("user_id")
+
+	var req struct {
+		FullName string `json:"full_name"`
+		Phone    string `json:"phone"`
+		Company  string `json:"company"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	var user User
+	if err := api.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Update fields
+	if req.FullName != "" {
+		user.FullName = req.FullName
+	}
+	if req.Phone != "" {
+		user.Phone = req.Phone
+	}
+	if req.Company != "" {
+		user.Company = req.Company
+	}
+
+	if err := api.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Profile updated successfully",
+		"user": gin.H{
+			"id":        user.ID,
+			"email":     user.Email,
+			"full_name": user.FullName,
+			"phone":     user.Phone,
+			"company":   user.Company,
+		},
+	})
 }
 
 func getEnv(key, defaultValue string) string {

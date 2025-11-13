@@ -42,6 +42,13 @@ dist-ssr/
 build/
 *.local
 
+# Next.js
+frontend-nextjs/.next/
+frontend-nextjs/out/
+frontend-nextjs/.vercel
+frontend-nextjs/*.tsbuildinfo
+frontend-nextjs/next-env.d.ts
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -60,11 +67,23 @@ build/
 # Hyperledger Fabric (network/)
 # ==========================================
 
-# Crypto materials (JANGAN COMMIT!)
-network/organizations/ordererOrganizations/
-network/organizations/peerOrganizations/
-network/crypto-config/
-network/channel-artifacts/
+# Crypto materials - keep structure but ignore generated keys
+network/organizations/ordererOrganizations/*/orderers/*/msp/keystore/*
+network/organizations/ordererOrganizations/*/orderers/*/tls/*
+network/organizations/peerOrganizations/*/peers/*/msp/keystore/*
+network/organizations/peerOrganizations/*/peers/*/tls/*
+network/organizations/peerOrganizations/*/users/*/msp/keystore/*
+network/organizations/peerOrganizations/*/users/*/tls/*
+
+# Keep the folder structure
+!network/organizations/ordererOrganizations/*/orderers/*/msp/keystore/.gitkeep
+!network/organizations/ordererOrganizations/*/orderers/*/tls/.gitkeep
+!network/organizations/peerOrganizations/*/peers/*/msp/keystore/.gitkeep
+!network/organizations/peerOrganizations/*/peers/*/tls/.gitkeep
+
+# Channel artifacts
+network/channel-artifacts/*.block
+network/channel-artifacts/*.tx
 
 # Wallet credentials
 wallet/
@@ -85,7 +104,8 @@ logs/
 # ==========================================
 # Database
 # ==========================================
-*.sql
+# Uncomment jika tidak mau commit SQL files
+# *.sql
 *.db
 *.sqlite
 *.sqlite3
