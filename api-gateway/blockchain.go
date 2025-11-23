@@ -74,6 +74,7 @@ func (bc *Blockchain) AddBlock(data map[string]interface{}) {
 	}
 
 	// Simple proof of work (find hash starting with zeros)
+	newBlock.Hash = newBlock.calculateHash()
 	for !bc.isValidProof(newBlock) {
 		newBlock.Nonce++
 		newBlock.Hash = newBlock.calculateHash()
@@ -84,6 +85,9 @@ func (bc *Blockchain) AddBlock(data map[string]interface{}) {
 
 // isValidProof checks if the hash starts with required zeros (difficulty = 2)
 func (bc *Blockchain) isValidProof(block Block) bool {
+	if len(block.Hash) < 2 {
+		return false
+	}
 	return block.Hash[:2] == "00" // Simple difficulty
 }
 

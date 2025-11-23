@@ -33,7 +33,7 @@ go run main.go blockchain.go fabric_client.go
 
 ### **Terminal 3: Start React Frontend**
 ```powershell
-cd C:\Blockchain\reservasihotel\web-ui
+cd C:\Blockchain\reservasihotel\frontend-nextjs
 npm run dev
 # Open: http://localhost:3000
 ```

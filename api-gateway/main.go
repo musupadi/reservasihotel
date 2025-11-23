@@ -135,8 +135,12 @@ func NewAPI() *API {
 		log.Printf("⚠️ Fabric connection failed: %v", err)
 		log.Println("🔄 Falling back to local blockchain simulation")
 		useFabric = false
+	} else if fabric.Contract == nil {
+		log.Println("⚠️ Fabric connected but chaincode not deployed (Development Mode)")
+		log.Println("🔄 Using local blockchain simulation for data storage")
+		useFabric = false
 	} else {
-		log.Println("✅ Real Hyperledger Fabric connected!")
+		log.Println("✅ Real Hyperledger Fabric connected with deployed chaincode!")
 		useFabric = true
 	}
 
@@ -431,7 +435,7 @@ func (api *API) createReservation(c *gin.Context) {
 	hotelID, _ := strconv.Atoi(req.HotelID)
 	roomTypeID, _ := strconv.Atoi(req.RoomTypeID)
 
-	// Get user ID from JWT if authenticated (optional)
+	// Get user ID from JWT token (if authenticated)
 	var userID *int
 	if id, exists := c.Get("user_id"); exists {
 		if uid, ok := id.(int); ok {
@@ -474,9 +478,9 @@ func (api *API) createReservation(c *gin.Context) {
 	// Create reservation in database
 	reservation := Reservation{
 		ReservationID:    req.ReservationID,
+		UserID:           userID,
 		HotelID:          hotelID,
 		RoomTypeID:       roomTypeID,
-		UserID:           userID, // Set user ID if authenticated
 		CheckIn:          checkIn,
 		CheckOut:         checkOut,
 		GuestCount:       req.GuestCount,
@@ -947,9 +951,9 @@ func (api *API) getReservationHistory(c *gin.Context) {
 	for _, h := range dbHistory {
 		historyData = append(historyData, map[string]interface{}{
 			"tx_id":      fmt.Sprintf("db_%d", h.ID),
-			"timestamp":  h.CreatedAt.Format("2006-01-02T15:04:05Z"),
-			"event_type": h.EventType,
-			"actor_msp":  h.ActorMSP,
+			"timestamp":  h.PerformedAt.Format("2006-01-02T15:04:05Z"),
+			"event_type": h.Action,
+			"actor_msp":  h.PerformedBy,
 			"note":       h.Note,
 			"block_num":  0, // Database events don't have block numbers
 			"source":     "database",
@@ -1045,7 +1049,7 @@ func (api *API) isValidStatusTransition(currentStatus, newStatus string) bool {
 
 // Database initialization
 func initDB() *gorm.DB {
-	host := getEnv("DB_HOST", "localhost")
+	host := getEnv("DB_HOST", "127.0.0.1")
 	port := getEnv("DB_PORT", "3306")
 	user := getEnv("DB_USER", "root")
 	password := getEnv("DB_PASSWORD", "")
