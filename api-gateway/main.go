@@ -19,18 +19,28 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID            int       `json:"id" gorm:"primaryKey;column:id"`
-	Email         string    `json:"email" gorm:"column:email;unique"`
-	Password      string    `json:"-" gorm:"column:password"`
-	FullName      string    `json:"full_name" gorm:"column:full_name"`
-	Phone         string    `json:"phone" gorm:"column:phone"`
-	Company       string    `json:"company" gorm:"column:company"`
-	Role          string    `json:"role" gorm:"column:role;default:'user'"`
-	IsActive      bool      `json:"is_active" gorm:"column:is_active;default:true"`
-	EmailVerified bool      `json:"email_verified" gorm:"column:email_verified;default:false"`
-	LastLogin     time.Time `json:"last_login" gorm:"column:last_login"`
-	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt     time.Time `json:"updated_at" gorm:"column:updated_at"`
+	ID        int       `json:"id" gorm:"primaryKey;column:id"`
+	Email     string    `json:"email" gorm:"column:email;unique"`
+	Password  string    `json:"-" gorm:"column:password"`
+	FullName  string    `json:"full_name" gorm:"column:full_name"`
+	Phone     string    `json:"phone" gorm:"column:phone"`
+	Company   string    `json:"company" gorm:"column:company"`
+	Role      string    `json:"role" gorm:"column:role;default:'customer'"`
+	HotelID   *int      `json:"hotel_id" gorm:"column:hotel_id"`
+	Status    string    `json:"status" gorm:"column:status;default:'active'"`
+	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
+}
+
+type HotelAdmin struct {
+	ID          int       `json:"id" gorm:"primaryKey;column:id"`
+	HotelID     int       `json:"hotel_id" gorm:"column:hotel_id"`
+	UserID      int       `json:"user_id" gorm:"column:user_id"`
+	Role        string    `json:"role" gorm:"column:role;default:'staff'"`
+	Permissions string    `json:"permissions" gorm:"column:permissions;type:json"`
+	AssignedBy  *int      `json:"assigned_by" gorm:"column:assigned_by"`
+	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
 
 // Hotel represents a hotel in the database - MATCH Node.js structure
@@ -43,6 +53,11 @@ type Hotel struct {
 	Description string    `json:"description" gorm:"column:description"`
 	Rating      float64   `json:"rating" gorm:"column:rating"`
 	ImageURL    string    `json:"image_url" gorm:"column:image_url"`
+	OwnerID     *int      `json:"owner_id" gorm:"column:owner_id"`
+	OwnerName   string    `json:"owner_name" gorm:"column:owner_name"`
+	OwnerPhone  string    `json:"owner_phone" gorm:"column:owner_phone"`
+	OwnerEmail  string    `json:"owner_email" gorm:"column:owner_email"`
+	Status      string    `json:"status" gorm:"column:status;default:'active'"`
 	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at"`
 	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
@@ -56,38 +71,77 @@ type RoomType struct {
 	PricePerPerson float64   `json:"price_per_person" gorm:"column:price_per_person"`
 	MinCapacity    int       `json:"min_capacity" gorm:"column:min_capacity"`
 	MaxCapacity    int       `json:"max_capacity" gorm:"column:max_capacity"`
-	AvailableRooms int       `json:"available_rooms" gorm:"column:available_rooms"`
 	Amenities      string    `json:"amenities" gorm:"column:amenities"`
 	CreatedAt      time.Time `json:"created_at" gorm:"column:created_at"`
 	UpdatedAt      time.Time `json:"updated_at" gorm:"column:updated_at"`
 	Hotel          Hotel     `json:"hotel" gorm:"foreignKey:HotelID"`
 }
 
+// HotelRoom represents a physical hotel room
+type HotelRoom struct {
+	ID                  int       `json:"id" gorm:"primaryKey;column:id"`
+	HotelID             int       `json:"hotel_id" gorm:"column:hotel_id"`
+	RoomTypeID          int       `json:"room_type_id" gorm:"column:room_type_id"`
+	RoomNumber          string    `json:"room_number" gorm:"column:room_number"`
+	Floor               int       `json:"floor" gorm:"column:floor"`
+	IsBlockchainEnabled bool      `json:"is_blockchain_enabled" gorm:"column:is_blockchain_enabled"`
+	Status              string    `json:"status" gorm:"column:status"`
+	CreatedAt           time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt           time.Time `json:"updated_at" gorm:"column:updated_at"`
+}
+
+func (HotelRoom) TableName() string {
+	return "hotel_rooms"
+}
+
+// RoomReservation represents room reservation mapping
+type RoomReservation struct {
+	ID            int       `json:"id" gorm:"primaryKey;column:id"`
+	ReservationID string    `json:"reservation_id" gorm:"column:reservation_id"`
+	HotelRoomID   int       `json:"hotel_room_id" gorm:"column:hotel_room_id"`
+	CheckIn       time.Time `json:"check_in" gorm:"column:check_in"`
+	CheckOut      time.Time `json:"check_out" gorm:"column:check_out"`
+	GuestNames    string    `json:"guest_names" gorm:"column:guest_names"`
+	Status        string    `json:"status" gorm:"column:status"`
+	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt     time.Time `json:"updated_at" gorm:"column:updated_at"`
+	HotelRoom     HotelRoom `json:"hotel_room" gorm:"foreignKey:HotelRoomID"`
+}
+
+func (RoomReservation) TableName() string {
+	return "room_reservations"
+}
+
 // Reservation represents a reservation - UPDATED untuk Event Booking
 type Reservation struct {
-	ID               int       `json:"id" gorm:"primaryKey;column:id"`
-	UserID           *int      `json:"user_id" gorm:"column:user_id"`
-	ReservationID    string    `json:"reservation_id" gorm:"column:reservation_id"`
-	HotelID          int       `json:"hotel_id" gorm:"column:hotel_id"`
-	RoomTypeID       int       `json:"room_type_id" gorm:"column:room_type_id"`
-	CheckIn          time.Time `json:"check_in" gorm:"column:check_in"`
-	CheckOut         time.Time `json:"check_out" gorm:"column:check_out"`
-	GuestCount       int       `json:"guest_count" gorm:"column:guest_count"`
-	EventType        string    `json:"event_type" gorm:"column:event_type"`
-	EventDescription string    `json:"event_description" gorm:"column:event_description"`
-	CustomerName     string    `json:"customer_name" gorm:"column:customer_name"`
-	CustomerPhone    string    `json:"customer_phone" gorm:"column:customer_phone"`
-	CustomerEmail    string    `json:"customer_email" gorm:"column:customer_email"`
-	CustomerRef      string    `json:"customer_ref" gorm:"column:customer_ref"`
-	PricePerPerson   float64   `json:"price_per_person" gorm:"column:price_per_person"`
-	TotalPrice       float64   `json:"total_price" gorm:"column:total_price"`
-	Currency         string    `json:"currency" gorm:"column:currency"`
-	Status           string    `json:"status" gorm:"column:status"`
-	CreatedByOrg     string    `json:"created_by_org" gorm:"column:created_by_org"`
-	CreatedAt        time.Time `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt        time.Time `json:"updated_at" gorm:"column:updated_at"`
-	Hotel            Hotel     `json:"hotel" gorm:"foreignKey:HotelID"`
-	RoomType         RoomType  `json:"room_type" gorm:"foreignKey:RoomTypeID"`
+	ID               int               `json:"id" gorm:"primaryKey;column:id"`
+	UserID           *int              `json:"user_id" gorm:"column:user_id;default:null"`
+	ReservationID    string            `json:"reservation_id" gorm:"column:reservation_id"`
+	HotelID          int               `json:"hotel_id" gorm:"column:hotel_id"`
+	RoomTypeID       int               `json:"room_type_id" gorm:"column:room_type_id"`
+	CheckIn          time.Time         `json:"check_in" gorm:"column:check_in"`
+	CheckOut         time.Time         `json:"check_out" gorm:"column:check_out"`
+	GuestCount       int               `json:"guest_count" gorm:"column:guest_count"`
+	TotalRoomsNeeded int               `json:"total_rooms_needed" gorm:"column:total_rooms_needed;default:1"`
+	EventType        string            `json:"event_type" gorm:"column:event_type"`
+	EventDescription string            `json:"event_description" gorm:"column:event_description"`
+	CustomerName     string            `json:"customer_name" gorm:"column:customer_name"`
+	CustomerPhone    string            `json:"customer_phone" gorm:"column:customer_phone"`
+	CustomerEmail    string            `json:"customer_email" gorm:"column:customer_email"`
+	CustomerRef      string            `json:"customer_ref" gorm:"column:customer_ref"`
+	PricePerPerson   float64           `json:"price_per_person" gorm:"column:price_per_person"`
+	TotalPrice       float64           `json:"total_price" gorm:"column:total_price"`
+	Currency         string            `json:"currency" gorm:"column:currency"`
+	Status           string            `json:"status" gorm:"column:status"`
+	PaymentStatus    string            `json:"payment_status" gorm:"column:payment_status;default:'unpaid'"`
+	PaymentMethod    string            `json:"payment_method" gorm:"column:payment_method"`
+	PaymentDate      *time.Time        `json:"payment_date" gorm:"column:payment_date"`
+	CreatedByOrg     string            `json:"created_by_org" gorm:"column:created_by_org"`
+	CreatedAt        time.Time         `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt        time.Time         `json:"updated_at" gorm:"column:updated_at"`
+	Hotel            Hotel             `json:"hotel" gorm:"foreignKey:HotelID"`
+	RoomType         RoomType          `json:"room_type" gorm:"foreignKey:RoomTypeID"`
+	RoomReservations []RoomReservation `json:"room_reservations" gorm:"foreignKey:ReservationID;references:ReservationID"`
 }
 
 // ReservationHistory represents reservation history events
@@ -232,6 +286,7 @@ func (api *API) setupRoutes() {
 
 		// Auth routes
 		v1.POST("/auth/register", api.register)
+		v1.POST("/auth/register-hotel", api.registerHotel)
 		v1.POST("/auth/login", api.login)
 		v1.GET("/auth/me", api.authMiddleware(), api.getMe)
 		v1.PUT("/auth/profile", api.authMiddleware(), api.updateProfile)
@@ -239,8 +294,27 @@ func (api *API) setupRoutes() {
 		// Hotel routes
 		v1.GET("/hotels", api.getHotels)
 		v1.GET("/hotels/:id", api.getHotel)
-		v1.GET("/hotels/:id/rooms", api.getHotelRooms)
-		v1.GET("/hotels/:id/room-types", api.getHotelRooms) // Alias for frontend compatibility
+		v1.PUT("/hotels/:id", api.authMiddleware(), api.updateHotel)
+		v1.GET("/hotels/:id/rooms", api.getIndividualRooms)
+		v1.GET("/hotels/:id/room-types", api.getHotelRooms)
+		v1.POST("/hotels/:id/room-types", api.authMiddleware(), api.createRoomType)
+		v1.PUT("/hotels/:id/room-types/:type_id", api.authMiddleware(), api.updateRoomType)
+		v1.DELETE("/hotels/:id/room-types/:type_id", api.authMiddleware(), api.deleteRoomType)
+		v1.POST("/hotels/:id/rooms", api.authMiddleware(), api.createRoom)
+		v1.PUT("/hotels/:id/rooms/:room_id", api.authMiddleware(), api.updateRoom)
+		v1.DELETE("/hotels/:id/rooms/:room_id", api.authMiddleware(), api.deleteRoom)
+
+		// Hotel Admin/Staff Management routes - NEW!
+		v1.GET("/hotels/:id/admins", api.authMiddleware(), api.getHotelAdmins)
+		v1.POST("/hotels/:id/admins", api.authMiddleware(), api.createHotelAdmin)
+		v1.PUT("/hotels/:id/admins/:admin_id", api.authMiddleware(), api.updateHotelAdmin)
+		v1.DELETE("/hotels/:id/admins/:admin_id", api.authMiddleware(), api.deleteHotelAdmin)
+
+		// Hotel Statistics - NEW!
+		v1.GET("/hotels/:id/statistics", api.authMiddleware(), api.getHotelStatistics)
+
+		// Room selection routes - NEW!
+		v1.GET("/hotels/:id/room-types/:room_type_id/available-rooms", api.getAvailableRooms)
 
 		// Price calculation endpoint - NEW!
 		v1.POST("/calculate-price", api.calculatePrice)
@@ -252,6 +326,8 @@ func (api *API) setupRoutes() {
 		v1.GET("/reservations/user/my-bookings", api.authMiddleware(), api.getUserReservations)
 		v1.POST("/reservations/:id/confirm", api.confirmReservation)
 		v1.POST("/reservations/:id/cancel", api.cancelReservation)
+		v1.POST("/reservations/:id/payment", api.optionalAuthMiddleware(), api.processPayment)
+		v1.POST("/reservations/:id/admin-cancel", api.authMiddleware(), api.adminCancelPending)
 		v1.POST("/reservations/:id/checkin", api.checkinReservation)
 		v1.POST("/reservations/:id/checkout", api.checkoutReservation)
 		v1.GET("/reservations/hotel/:hotelId", api.getHotelReservations)
@@ -310,6 +386,70 @@ func (api *API) getHotel(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"hotel": hotel})
 }
 
+// updateHotel - Update hotel information
+func (api *API) updateHotel(c *gin.Context) {
+	hotelID := c.Param("id")
+
+	// Check if user has permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Verify user belongs to this hotel
+	hotelIDInt := stringToInt(hotelID)
+	log.Printf("DEBUG updateHotel: User ID=%d, User HotelID=%v, Requested HotelID=%d", user.ID, user.HotelID, hotelIDInt)
+
+	if user.HotelID == nil {
+		log.Printf("ERROR: User %d has no hotel_id", user.ID)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied - no hotel assigned"})
+		return
+	}
+
+	if *user.HotelID != hotelIDInt {
+		log.Printf("ERROR: User hotel_id %d does not match requested hotel %d", *user.HotelID, hotelIDInt)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied - hotel mismatch"})
+		return
+	}
+
+	var req struct {
+		Name        string  `json:"name"`
+		City        string  `json:"city"`
+		Address     string  `json:"address"`
+		Description string  `json:"description"`
+		Rating      float64 `json:"rating"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Update hotel
+	var hotel Hotel
+	if err := api.DB.First(&hotel, hotelID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Hotel not found"})
+		return
+	}
+
+	hotel.Name = req.Name
+	hotel.City = req.City
+	hotel.Address = req.Address
+	hotel.Description = req.Description
+	hotel.Rating = req.Rating
+
+	if err := api.DB.Save(&hotel).Error; err != nil {
+		log.Printf("ERROR updating hotel: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update hotel"})
+		return
+	}
+
+	log.Printf("✅ Hotel %d updated by user %d", hotel.ID, user.ID)
+	c.JSON(http.StatusOK, gin.H{"message": "Hotel updated successfully", "hotel": hotel})
+}
+
 func (api *API) getHotelRooms(c *gin.Context) {
 	id := c.Param("id")
 	var roomTypes []RoomType
@@ -317,7 +457,94 @@ func (api *API) getHotelRooms(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch room types"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"room_types": roomTypes})
+
+	// Add calculated counts to response
+	type RoomTypeWithCounts struct {
+		RoomType
+		TotalRooms              int64 `json:"total_rooms"`
+		BlockchainReservedRooms int64 `json:"blockchain_reserved_rooms"`
+		AvailableRooms          int64 `json:"available_rooms"`
+	}
+
+	var response []RoomTypeWithCounts
+	for _, rt := range roomTypes {
+		total, blockchain, _ := api.getRoomTypeCounts(rt.ID)
+		response = append(response, RoomTypeWithCounts{
+			RoomType:                rt,
+			TotalRooms:              total,
+			BlockchainReservedRooms: blockchain,
+			AvailableRooms:          total, // TODO: Calculate based on reservations
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"room_types": response})
+}
+
+// getIndividualRooms - Get individual hotel rooms (from hotel_rooms table)
+func (api *API) getIndividualRooms(c *gin.Context) {
+	id := c.Param("id")
+	var rooms []HotelRoom
+	if err := api.DB.Where("hotel_id = ?", id).Order("room_number").Find(&rooms).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch rooms"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"rooms": rooms})
+}
+
+// getAvailableRooms - NEW! Get available rooms for booking (blockchain enabled only)
+func (api *API) getAvailableRooms(c *gin.Context) {
+	hotelID := c.Param("id")
+	roomTypeID := c.Param("room_type_id")
+	checkIn := c.Query("check_in")
+	checkOut := c.Query("check_out")
+
+	// Parse dates
+	checkInDate, err1 := time.Parse("2006-01-02", checkIn)
+	checkOutDate, err2 := time.Parse("2006-01-02", checkOut)
+	if err1 != nil || err2 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format. Use YYYY-MM-DD"})
+		return
+	}
+
+	// Get all blockchain-enabled rooms for this room type
+	var allRooms []HotelRoom
+	if err := api.DB.Where("hotel_id = ? AND room_type_id = ? AND is_blockchain_enabled = ? AND status = ?",
+		hotelID, roomTypeID, true, "AVAILABLE").
+		Order("room_number").
+		Find(&allRooms).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch rooms"})
+		return
+	}
+
+	// Get booked room IDs for the date range
+	var bookedRoomIDs []int
+	api.DB.Table("room_reservations").
+		Select("DISTINCT hotel_room_id").
+		Where("check_in < ? AND check_out > ? AND status NOT IN (?)",
+			checkOutDate, checkInDate, []string{"CANCELLED", "CHECKED_OUT"}).
+		Pluck("hotel_room_id", &bookedRoomIDs)
+
+	// Filter available rooms
+	availableRooms := []HotelRoom{}
+	for _, room := range allRooms {
+		isBooked := false
+		for _, bookedID := range bookedRoomIDs {
+			if room.ID == bookedID {
+				isBooked = true
+				break
+			}
+		}
+		if !isBooked {
+			availableRooms = append(availableRooms, room)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"available_rooms": availableRooms,
+		"total":           len(availableRooms),
+		"check_in":        checkIn,
+		"check_out":       checkOut,
+	})
 }
 
 // calculatePrice - NEW! Endpoint untuk simulasi kalkulasi harga
@@ -398,12 +625,13 @@ func (api *API) createReservation(c *gin.Context) {
 		CheckIn          string `json:"check_in"`
 		CheckOut         string `json:"check_out"`
 		GuestCount       int    `json:"guest_count"`
-		EventType        string `json:"event_type"`        // NEW: Birthday, Meeting, Wedding, dll
-		EventDescription string `json:"event_description"` // NEW: Detail acara
-		CustomerName     string `json:"customer_name"`     // NEW
-		CustomerPhone    string `json:"customer_phone"`    // NEW
-		CustomerEmail    string `json:"customer_email"`    // NEW
+		EventType        string `json:"event_type"`
+		EventDescription string `json:"event_description"`
+		CustomerName     string `json:"customer_name"`
+		CustomerPhone    string `json:"customer_phone"`
+		CustomerEmail    string `json:"customer_email"`
 		CustomerRef      string `json:"customer_ref"`
+		SelectedRoomIDs  []int  `json:"selected_room_ids"` // NEW: Array of hotel_room IDs
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -431,17 +659,62 @@ func (api *API) createReservation(c *gin.Context) {
 		return
 	}
 
+	// Validate dates
+	if checkOut.Before(checkIn) || checkOut.Equal(checkIn) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Check-out date must be after check-in date"})
+		return
+	}
+
+	// Check if check-in is in the past
+	today := time.Now().Truncate(24 * time.Hour)
+	if checkIn.Before(today) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Check-in date cannot be in the past"})
+		return
+	}
+
 	// Convert string IDs to int
 	hotelID, _ := strconv.Atoi(req.HotelID)
 	roomTypeID, _ := strconv.Atoi(req.RoomTypeID)
 
-	// Get user ID from JWT token (if authenticated)
-	var userID *int
-	if id, exists := c.Get("user_id"); exists {
-		if uid, ok := id.(int); ok {
-			userID = &uid
-		}
+	// Validate selected rooms
+	if len(req.SelectedRoomIDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Please select at least one room"})
+		return
 	}
+
+	// Verify all selected rooms are available and blockchain-enabled
+	var selectedRooms []HotelRoom
+	if err := api.DB.Where("id IN (?) AND hotel_id = ? AND room_type_id = ? AND is_blockchain_enabled = ? AND status = ?",
+		req.SelectedRoomIDs, hotelID, roomTypeID, true, "AVAILABLE").
+		Find(&selectedRooms).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify selected rooms"})
+		return
+	}
+
+	if len(selectedRooms) != len(req.SelectedRoomIDs) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Some selected rooms are not available or invalid"})
+		return
+	}
+
+	// Check if rooms are already booked for this date range
+	var existingBookings int64
+	api.DB.Table("room_reservations").
+		Where("hotel_room_id IN (?) AND check_in < ? AND check_out > ? AND status NOT IN (?)",
+			req.SelectedRoomIDs, checkOut, checkIn, []string{"CANCELLED", "CHECKED_OUT"}).
+		Count(&existingBookings)
+
+	if existingBookings > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "One or more selected rooms are already booked for this date range"})
+		return
+	}
+
+	// Get user ID from JWT token (if authenticated) - DISABLED: user_id column doesn't exist
+	// var userID *int
+	// if id, exists := c.Get("user_id"); exists {
+	// 	if uid, ok := id.(int); ok {
+	// 		userID = &uid
+	// 	}
+	// }
 
 	// Get room type for price calculation
 	var roomType RoomType
@@ -475,15 +748,23 @@ func (api *API) createReservation(c *gin.Context) {
 		eventType = "Meeting"
 	}
 
-	// Create reservation in database
+	// Create reservation in database with transaction
+	tx := api.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	reservation := Reservation{
-		ReservationID:    req.ReservationID,
-		UserID:           userID,
+		ReservationID: req.ReservationID,
+		// UserID:           userID, // Skip - column doesn't exist in table
 		HotelID:          hotelID,
 		RoomTypeID:       roomTypeID,
 		CheckIn:          checkIn,
 		CheckOut:         checkOut,
 		GuestCount:       req.GuestCount,
+		TotalRoomsNeeded: len(req.SelectedRoomIDs),
 		EventType:        eventType,
 		EventDescription: req.EventDescription,
 		CustomerName:     req.CustomerName,
@@ -497,10 +778,39 @@ func (api *API) createReservation(c *gin.Context) {
 		CreatedByOrg:     "GoBackendMSP",
 	}
 
-	if err := api.DB.Create(&reservation).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create reservation"})
+	if err := tx.Create(&reservation).Error; err != nil {
+		tx.Rollback()
+		log.Printf("ERROR creating reservation: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create reservation", "details": err.Error()})
 		return
 	}
+
+	// Create room reservations for each selected room
+	for _, roomID := range req.SelectedRoomIDs {
+		roomReservation := RoomReservation{
+			ReservationID: req.ReservationID,
+			HotelRoomID:   roomID,
+			CheckIn:       checkIn,
+			CheckOut:      checkOut,
+			GuestNames:    "", // Optional field
+			Status:        "BOOKED",
+		}
+		if err := tx.Create(&roomReservation).Error; err != nil {
+			tx.Rollback()
+			log.Printf("ERROR creating room reservation for room %d: %v", roomID, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create room reservation for room %d", roomID), "details": err.Error()})
+			return
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		log.Printf("ERROR committing transaction: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit reservation", "details": err.Error()})
+		return
+	}
+
+	log.Printf("✅ Reservation %s created successfully with %d rooms", req.ReservationID, len(req.SelectedRoomIDs))
 
 	// Add to blockchain (hybrid approach)
 	blockchainType := "Local Simulation"
@@ -678,11 +988,26 @@ func (api *API) getReservation(c *gin.Context) {
 
 // Get user's reservations (authenticated)
 func (api *API) getUserReservations(c *gin.Context) {
-	userID := c.GetInt("user_id")
+	// Get user from context
+	userVal, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	user, ok := userVal.(User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user data"})
+		return
+	}
 
 	var reservations []Reservation
-	if err := api.DB.Preload("Hotel").Preload("RoomType").Where("user_id = ?", userID).Order("created_at DESC").Find(&reservations).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reservations"})
+	// Query by customer_email (untuk data lama yang tidak punya user_id)
+	if err := api.DB.Preload("Hotel").Preload("RoomType").
+		Where("customer_email = ?", user.Email).
+		Order("created_at DESC").
+		Find(&reservations).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reservations", "details": err.Error()})
 		return
 	}
 
@@ -703,6 +1028,8 @@ func (api *API) getUserReservations(c *gin.Context) {
 			"total_price":       reservation.TotalPrice,
 			"currency":          reservation.Currency,
 			"status":            reservation.Status,
+			"payment_status":    reservation.PaymentStatus, // TAMBAH payment_status
+			"payment_method":    reservation.PaymentMethod, // TAMBAH payment_method
 			"created_at":        reservation.CreatedAt,
 			"updated_at":        reservation.UpdatedAt,
 			"hotel": map[string]interface{}{
@@ -740,6 +1067,184 @@ func (api *API) checkinReservation(c *gin.Context) {
 
 func (api *API) checkoutReservation(c *gin.Context) {
 	api.updateReservationStatus(c, "CHECKED_OUT", "Guest checked out")
+}
+
+// processPayment handles payment for a reservation
+func (api *API) processPayment(c *gin.Context) {
+	id := c.Param("id")
+
+	var req struct {
+		PaymentMethod string `json:"payment_method" binding:"required"`
+		PaymentProof  string `json:"payment_proof"` // Optional: untuk upload bukti transfer
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payment method is required"})
+		return
+	}
+
+	// Check if reservation exists
+	var reservation Reservation
+	if err := api.DB.Where("reservation_id = ?", id).First(&reservation).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Reservation not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reservation"})
+		return
+	}
+
+	// Check if already paid
+	if reservation.PaymentStatus == "paid" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Reservation already paid"})
+		return
+	}
+
+	// Check if reservation is cancelled
+	if reservation.Status == "CANCELLED" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot pay for cancelled reservation"})
+		return
+	}
+
+	// Update payment status AND confirm reservation
+	now := time.Now()
+	updates := map[string]interface{}{
+		"payment_status": "paid",
+		"payment_method": req.PaymentMethod,
+		"payment_date":   now,
+		"status":         "CONFIRMED", // Otomatis confirm setelah bayar
+	}
+
+	if err := api.DB.Model(&reservation).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update payment status"})
+		return
+	}
+
+	// Create history event for payment
+	api.createHistoryEvent(id, "PAID", fmt.Sprintf("Payment received via %s", req.PaymentMethod))
+
+	// Create history event for auto-confirmation
+	api.createHistoryEvent(id, "CONFIRMED", "Reservation auto-confirmed after payment")
+
+	// Update blockchain
+	blockchainType := "Local Simulation"
+	var blockchainErr error
+
+	if api.UseFabric {
+		// Update on Hyperledger Fabric
+		blockchainErr = api.Fabric.ConfirmReservation(id, fmt.Sprintf("Auto-confirmed after payment via %s", req.PaymentMethod))
+		blockchainType = "Hyperledger Fabric"
+	} else {
+		// Update local blockchain
+		api.Blockchain.UpdateReservationStatusTx(id, "CONFIRMED", "Auto-confirmed after payment")
+	}
+
+	response := gin.H{
+		"message":        "Payment processed successfully. Reservation is now CONFIRMED!",
+		"reservation_id": id,
+		"payment_status": "paid",
+		"payment_method": req.PaymentMethod,
+		"payment_date":   now,
+		"status":         "CONFIRMED",
+		"blockchain":     blockchainType,
+	}
+
+	if blockchainErr != nil {
+		response["blockchain_warning"] = fmt.Sprintf("Payment processed but blockchain update failed: %v", blockchainErr)
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// adminCancelPending allows hotel admin to cancel pending unpaid reservations
+func (api *API) adminCancelPending(c *gin.Context) {
+	id := c.Param("id")
+
+	// Get user from context (set by authMiddleware)
+	userVal, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	user := userVal.(User)
+
+	// Check if user is hotel admin
+	if user.Role != "hotel_admin" && user.Role != "hotel_super_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only hotel admins can cancel reservations"})
+		return
+	}
+
+	// Get reservation
+	var reservation Reservation
+	if err := api.DB.Where("reservation_id = ?", id).First(&reservation).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Reservation not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reservation"})
+		return
+	}
+
+	// Check if admin's hotel matches reservation's hotel
+	if user.HotelID == nil || *user.HotelID != reservation.HotelID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You can only cancel reservations for your own hotel"})
+		return
+	}
+
+	// Check if reservation is pending
+	if reservation.Status != "PENDING" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Can only cancel PENDING reservations"})
+		return
+	}
+
+	// Check if unpaid
+	if reservation.PaymentStatus == "paid" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot cancel paid reservation. Please process refund first."})
+		return
+	}
+
+	var req struct {
+		Reason string `json:"reason"`
+	}
+	c.ShouldBindJSON(&req)
+
+	reason := req.Reason
+	if reason == "" {
+		reason = "Cancelled by hotel admin - unpaid reservation"
+	}
+
+	// Update status to cancelled
+	if err := api.DB.Model(&reservation).Update("status", "CANCELLED").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel reservation"})
+		return
+	}
+
+	// Create history event
+	api.createHistoryEvent(id, "CANCELLED", fmt.Sprintf("Cancelled by admin: %s", reason))
+
+	// Update blockchain
+	blockchainType := "Local Simulation"
+	var blockchainErr error
+	if api.UseFabric {
+		blockchainErr = api.Fabric.CancelReservation(id, reason)
+		blockchainType = "Hyperledger Fabric"
+	} else {
+		api.Blockchain.UpdateReservationStatusTx(id, "CANCELLED", reason)
+	}
+
+	response := gin.H{
+		"message":        "Reservation cancelled successfully by admin",
+		"reservation_id": id,
+		"status":         "CANCELLED",
+		"reason":         reason,
+		"blockchain":     blockchainType,
+	}
+
+	if blockchainErr != nil {
+		response["blockchain_warning"] = fmt.Sprintf("Database updated but blockchain failed: %v", blockchainErr)
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (api *API) updateReservationStatus(c *gin.Context, newStatus, defaultNote string) {
@@ -852,6 +1357,8 @@ func (api *API) getHotelReservations(c *gin.Context) {
 			"totalPrice":       r.TotalPrice,
 			"currency":         r.Currency,
 			"status":           r.Status,
+			"payment_status":   r.PaymentStatus, // TAMBAH ini
+			"payment_method":   r.PaymentMethod, // TAMBAH ini
 			"createdByOrg":     r.CreatedByOrg,
 			"lastUpdatedAt":    r.UpdatedAt,
 			"hotelName":        r.Hotel.Name,
@@ -1132,9 +1639,19 @@ func (api *API) authMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// Fetch full user object from database
+		var user User
+		if err := api.DB.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+			c.Abort()
+			return
+		}
+
+		// Set user data to context
 		c.Set("user_id", claims.UserID)
 		c.Set("user_email", claims.Email)
 		c.Set("user_role", claims.Role)
+		c.Set("user", user) // Set full user object
 		c.Next()
 	}
 }
@@ -1202,8 +1719,8 @@ func (api *API) register(c *gin.Context) {
 		FullName: req.FullName,
 		Phone:    req.Phone,
 		Company:  req.Company,
-		Role:     "user",
-		IsActive: true,
+		Role:     "customer",
+		Status:   "active",
 	}
 
 	if err := api.DB.Create(&user).Error; err != nil {
@@ -1244,6 +1761,177 @@ func (api *API) register(c *gin.Context) {
 	})
 }
 
+// Register Hotel - Creates hotel and super admin user
+func (api *API) registerHotel(c *gin.Context) {
+	var req struct {
+		// User details
+		Email           string `json:"email" binding:"required,email"`
+		Password        string `json:"password" binding:"required,min=6"`
+		ConfirmPassword string `json:"confirmPassword"`
+		FullName        string `json:"full_name" binding:"required"`
+		Phone           string `json:"phone" binding:"required"`
+
+		// Hotel details
+		HotelName        string `json:"hotel_name" binding:"required"`
+		HotelCity        string `json:"hotel_city" binding:"required"`
+		HotelAddress     string `json:"hotel_address" binding:"required"`
+		HotelDescription string `json:"hotel_description"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
+		return
+	}
+
+	// Validate password confirmation
+	if req.ConfirmPassword != "" && req.Password != req.ConfirmPassword {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password and confirm password do not match"})
+		return
+	}
+
+	// Check if email already exists
+	var existingUser User
+	if err := api.DB.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered"})
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	// Start transaction
+	tx := api.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Create hotel first
+	hotel := Hotel{
+		Name:        req.HotelName,
+		City:        req.HotelCity,
+		Country:     "Indonesia",
+		Address:     req.HotelAddress,
+		Description: req.HotelDescription,
+		Rating:      4.5, // Default rating
+		Status:      "active",
+	}
+
+	if err := tx.Create(&hotel).Error; err != nil {
+		tx.Rollback()
+		log.Printf("ERROR creating hotel: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create hotel"})
+		return
+	}
+
+	// Create user as hotel super admin
+	user := User{
+		Email:    req.Email,
+		Password: string(hashedPassword),
+		FullName: req.FullName,
+		Phone:    req.Phone,
+		Role:     "hotel_super_admin",
+		HotelID:  &hotel.ID,
+		Status:   "active",
+	}
+
+	if err := tx.Create(&user).Error; err != nil {
+		tx.Rollback()
+		log.Printf("ERROR creating user: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
+
+	// Create hotel admin mapping
+	hotelAdmin := HotelAdmin{
+		HotelID: hotel.ID,
+		UserID:  user.ID,
+		Role:    "super_admin",
+		Permissions: `{
+			"manage_admins": true,
+			"manage_rooms": true,
+			"manage_packages": true,
+			"view_bookings": true,
+			"manage_bookings": true,
+			"view_reports": true
+		}`,
+	}
+
+	if err := tx.Create(&hotelAdmin).Error; err != nil {
+		tx.Rollback()
+		log.Printf("ERROR creating hotel admin: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assign admin role"})
+		return
+	}
+
+	// Update hotel with owner info
+	if err := tx.Model(&Hotel{}).Where("id = ?", hotel.ID).Updates(map[string]interface{}{
+		"owner_id":    user.ID,
+		"owner_name":  req.FullName,
+		"owner_phone": req.Phone,
+		"owner_email": req.Email,
+		"status":      "active",
+	}).Error; err != nil {
+		tx.Rollback()
+		log.Printf("ERROR updating hotel owner: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update hotel owner"})
+		return
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		log.Printf("ERROR committing transaction: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete registration"})
+		return
+	}
+
+	log.Printf("✅ Hotel '%s' registered successfully by %s (User ID: %d, Hotel ID: %d)", hotel.Name, user.FullName, user.ID, hotel.ID)
+
+	// Generate JWT token
+	expirationTime := time.Now().Add(24 * time.Hour * 7) // 7 days
+	claims := &Claims{
+		UserID: user.ID,
+		Email:  user.Email,
+		Role:   user.Role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Hotel registered successfully",
+		"token":   tokenString,
+		"user": gin.H{
+			"id":        user.ID,
+			"email":     user.Email,
+			"full_name": user.FullName,
+			"phone":     user.Phone,
+			"role":      user.Role,
+			"hotel_id":  user.HotelID,
+		},
+		"hotel": gin.H{
+			"id":      hotel.ID,
+			"name":    hotel.Name,
+			"city":    hotel.City,
+			"address": hotel.Address,
+			"status":  "active",
+		},
+	})
+}
+
 // Login handler
 func (api *API) login(c *gin.Context) {
 	var req struct {
@@ -1264,7 +1952,7 @@ func (api *API) login(c *gin.Context) {
 	}
 
 	// Check if user is active
-	if !user.IsActive {
+	if user.Status != "active" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Account is inactive"})
 		return
 	}
@@ -1276,7 +1964,8 @@ func (api *API) login(c *gin.Context) {
 	}
 
 	// Update last login
-	api.DB.Model(&user).Update("last_login", time.Now())
+	// No longer updating last_login since column doesn't exist
+	// api.DB.Model(&user).Update("last_login", time.Now())
 
 	// Generate JWT token
 	expirationTime := time.Now().Add(24 * time.Hour * 7) // 7 days
@@ -1307,6 +1996,7 @@ func (api *API) login(c *gin.Context) {
 			"phone":     user.Phone,
 			"company":   user.Company,
 			"role":      user.Role,
+			"hotel_id":  user.HotelID,
 		},
 	})
 }
@@ -1408,4 +2098,719 @@ func main() {
 	fmt.Println("✨ Hybrid blockchain backend ready!")
 
 	log.Fatal(api.Router.Run(":" + port))
+}
+
+// getRoomTypeCounts - Helper function to get room counts for a room type (calculated on-the-fly)
+func (api *API) getRoomTypeCounts(roomTypeID int) (totalRooms int64, blockchainRooms int64, err error) {
+	// Count total rooms
+	if err := api.DB.Model(&HotelRoom{}).Where("room_type_id = ?", roomTypeID).Count(&totalRooms).Error; err != nil {
+		return 0, 0, err
+	}
+
+	// Count blockchain-enabled rooms
+	if err := api.DB.Model(&HotelRoom{}).Where("room_type_id = ? AND is_blockchain_enabled = ?", roomTypeID, true).Count(&blockchainRooms).Error; err != nil {
+		return 0, 0, err
+	}
+
+	return totalRooms, blockchainRooms, nil
+}
+
+// createRoom - Create a new room
+func (api *API) createRoom(c *gin.Context) {
+	hotelID := c.Param("id")
+
+	// Check if user has permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Verify user belongs to this hotel
+	if user.HotelID == nil || *user.HotelID != stringToInt(hotelID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	var req struct {
+		RoomTypeID          int    `json:"room_type_id" binding:"required"`
+		RoomNumber          string `json:"room_number" binding:"required"`
+		Floor               int    `json:"floor" binding:"required"`
+		IsBlockchainEnabled bool   `json:"is_blockchain_enabled"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Check if room number already exists
+	var existingRoom HotelRoom
+	if err := api.DB.Where("hotel_id = ? AND room_number = ?", hotelID, req.RoomNumber).First(&existingRoom).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Room number already exists"})
+		return
+	}
+
+	room := HotelRoom{
+		HotelID:             stringToInt(hotelID),
+		RoomTypeID:          req.RoomTypeID,
+		RoomNumber:          req.RoomNumber,
+		Floor:               req.Floor,
+		IsBlockchainEnabled: req.IsBlockchainEnabled,
+		Status:              "AVAILABLE",
+	}
+
+	if err := api.DB.Create(&room).Error; err != nil {
+		log.Printf("ERROR creating room: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create room"})
+		return
+	}
+
+	log.Printf("✅ Room %s created for hotel %s", req.RoomNumber, hotelID)
+	c.JSON(http.StatusCreated, gin.H{"message": "Room created successfully", "room": room})
+}
+
+// updateRoom - Update an existing room
+func (api *API) updateRoom(c *gin.Context) {
+	hotelID := c.Param("id")
+	roomID := c.Param("room_id")
+
+	// Check if user has permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Verify user belongs to this hotel
+	if user.HotelID == nil || *user.HotelID != stringToInt(hotelID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	var room HotelRoom
+	if err := api.DB.Where("id = ? AND hotel_id = ?", roomID, hotelID).First(&room).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Room not found"})
+		return
+	}
+
+	var req struct {
+		RoomTypeID          *int    `json:"room_type_id"`
+		RoomNumber          *string `json:"room_number"`
+		Floor               *int    `json:"floor"`
+		IsBlockchainEnabled *bool   `json:"is_blockchain_enabled"`
+		Status              *string `json:"status"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Update fields
+	updates := make(map[string]interface{})
+	if req.RoomTypeID != nil {
+		updates["room_type_id"] = *req.RoomTypeID
+	}
+	if req.RoomNumber != nil {
+		// Check if new room number already exists
+		var existingRoom HotelRoom
+		if err := api.DB.Where("hotel_id = ? AND room_number = ? AND id != ?", hotelID, *req.RoomNumber, roomID).First(&existingRoom).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Room number already exists"})
+			return
+		}
+		updates["room_number"] = *req.RoomNumber
+	}
+	if req.Floor != nil {
+		updates["floor"] = *req.Floor
+	}
+	if req.IsBlockchainEnabled != nil {
+		updates["is_blockchain_enabled"] = *req.IsBlockchainEnabled
+	}
+	if req.Status != nil {
+		updates["status"] = *req.Status
+	}
+
+	if err := api.DB.Model(&room).Updates(updates).Error; err != nil {
+		log.Printf("ERROR updating room: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update room"})
+		return
+	}
+
+	// Reload room data
+	api.DB.Where("id = ?", roomID).First(&room)
+
+	log.Printf("✅ Room %d updated for hotel %s", room.ID, hotelID)
+	c.JSON(http.StatusOK, gin.H{"message": "Room updated successfully", "room": room})
+}
+
+// deleteRoom - Delete a room
+func (api *API) deleteRoom(c *gin.Context) {
+	hotelID := c.Param("id")
+	roomID := c.Param("room_id")
+
+	// Check if user has permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Verify user belongs to this hotel
+	if user.HotelID == nil || *user.HotelID != stringToInt(hotelID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	var room HotelRoom
+	if err := api.DB.Where("id = ? AND hotel_id = ?", roomID, hotelID).First(&room).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Room not found"})
+		return
+	}
+
+	// Check if room has active reservations
+	var activeReservations int64
+	api.DB.Model(&RoomReservation{}).
+		Where("hotel_room_id = ? AND status IN (?)", roomID, []string{"CONFIRMED", "CHECKED_IN"}).
+		Count(&activeReservations)
+
+	if activeReservations > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot delete room with active reservations"})
+		return
+	}
+
+	if err := api.DB.Delete(&room).Error; err != nil {
+		log.Printf("ERROR deleting room: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete room"})
+		return
+	}
+
+	log.Printf("✅ Room %d deleted from hotel %s", room.ID, hotelID)
+	c.JSON(http.StatusOK, gin.H{"message": "Room deleted successfully"})
+}
+
+// createRoomType - Create a new room type
+func (api *API) createRoomType(c *gin.Context) {
+	hotelID := c.Param("id")
+
+	// Check if user has permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Verify user belongs to this hotel OR is super admin
+	hotelIDInt := stringToInt(hotelID)
+	if user.HotelID == nil {
+		log.Printf("ERROR: User %d has no hotel_id", user.ID)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied - no hotel assigned"})
+		return
+	}
+
+	if *user.HotelID != hotelIDInt {
+		log.Printf("ERROR: User hotel_id %d does not match requested hotel %d", *user.HotelID, hotelIDInt)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied - hotel mismatch"})
+		return
+	}
+
+	var req struct {
+		TypeName       string  `json:"type_name" binding:"required"`
+		Description    string  `json:"description"`
+		PricePerPerson float64 `json:"price_per_person" binding:"required"`
+		MinCapacity    int     `json:"min_capacity" binding:"required"`
+		MaxCapacity    int     `json:"max_capacity" binding:"required"`
+		Amenities      string  `json:"amenities"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	roomType := RoomType{
+		HotelID:        stringToInt(hotelID),
+		TypeName:       req.TypeName,
+		Description:    req.Description,
+		PricePerPerson: req.PricePerPerson,
+		MinCapacity:    req.MinCapacity,
+		MaxCapacity:    req.MaxCapacity,
+		Amenities:      req.Amenities,
+	}
+
+	if err := api.DB.Create(&roomType).Error; err != nil {
+		log.Printf("ERROR creating room type: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create room type"})
+		return
+	}
+
+	log.Printf("✅ Room type '%s' created for hotel %s", req.TypeName, hotelID)
+	c.JSON(http.StatusCreated, gin.H{"message": "Room type created successfully", "room_type": roomType})
+}
+
+// updateRoomType - Update an existing room type
+func (api *API) updateRoomType(c *gin.Context) {
+	hotelID := c.Param("id")
+	typeID := c.Param("type_id")
+
+	// Check if user has permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Verify user belongs to this hotel
+	if user.HotelID == nil || *user.HotelID != stringToInt(hotelID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	var roomType RoomType
+	if err := api.DB.Where("id = ? AND hotel_id = ?", typeID, hotelID).First(&roomType).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Room type not found"})
+		return
+	}
+
+	var req struct {
+		TypeName                *string  `json:"type_name"`
+		Description             *string  `json:"description"`
+		PricePerPerson          *float64 `json:"price_per_person"`
+		MinCapacity             *int     `json:"min_capacity"`
+		MaxCapacity             *int     `json:"max_capacity"`
+		TotalRooms              *int     `json:"total_rooms"`
+		BlockchainReservedRooms *int     `json:"blockchain_reserved_rooms"`
+		Amenities               *string  `json:"amenities"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Update fields
+	updates := make(map[string]interface{})
+	if req.TypeName != nil {
+		updates["type_name"] = *req.TypeName
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+	if req.PricePerPerson != nil {
+		updates["price_per_person"] = *req.PricePerPerson
+	}
+	if req.MinCapacity != nil {
+		updates["min_capacity"] = *req.MinCapacity
+	}
+	if req.MaxCapacity != nil {
+		updates["max_capacity"] = *req.MaxCapacity
+	}
+	if req.TotalRooms != nil {
+		updates["total_rooms"] = *req.TotalRooms
+		updates["available_rooms"] = *req.TotalRooms
+	}
+	if req.BlockchainReservedRooms != nil {
+		updates["blockchain_reserved_rooms"] = *req.BlockchainReservedRooms
+	}
+	if req.Amenities != nil {
+		updates["amenities"] = *req.Amenities
+	}
+
+	if err := api.DB.Model(&roomType).Updates(updates).Error; err != nil {
+		log.Printf("ERROR updating room type: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update room type"})
+		return
+	}
+
+	// Reload room type data
+	api.DB.Where("id = ?", typeID).First(&roomType)
+
+	log.Printf("✅ Room type %d updated for hotel %s", roomType.ID, hotelID)
+	c.JSON(http.StatusOK, gin.H{"message": "Room type updated successfully", "room_type": roomType})
+}
+
+// deleteRoomType - Delete a room type
+func (api *API) deleteRoomType(c *gin.Context) {
+	hotelID := c.Param("id")
+	typeID := c.Param("type_id")
+
+	// Check if user has permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Verify user belongs to this hotel
+	if user.HotelID == nil || *user.HotelID != stringToInt(hotelID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	var roomType RoomType
+	if err := api.DB.Where("id = ? AND hotel_id = ?", typeID, hotelID).First(&roomType).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Room type not found"})
+		return
+	}
+
+	// Check if room type has rooms
+	var roomCount int64
+	api.DB.Model(&HotelRoom{}).Where("room_type_id = ?", typeID).Count(&roomCount)
+
+	if roomCount > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot delete room type with existing rooms"})
+		return
+	}
+
+	if err := api.DB.Delete(&roomType).Error; err != nil {
+		log.Printf("ERROR deleting room type: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete room type"})
+		return
+	}
+
+	log.Printf("✅ Room type %d deleted from hotel %s", roomType.ID, hotelID)
+	c.JSON(http.StatusOK, gin.H{"message": "Room type deleted successfully"})
+}
+
+// ============================================================================
+// HOTEL ADMIN/STAFF MANAGEMENT HANDLERS
+// ============================================================================
+
+// getHotelAdmins - Get all admins/staff for a hotel
+func (api *API) getHotelAdmins(c *gin.Context) {
+	hotelID := c.Param("id")
+
+	// Check permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	hotelIDInt := stringToInt(hotelID)
+	if user.HotelID == nil || *user.HotelID != hotelIDInt {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	// Get all admins with user details
+	type AdminWithUser struct {
+		HotelAdmin
+		User User `json:"user" gorm:"foreignKey:UserID"`
+	}
+
+	var admins []HotelAdmin
+	if err := api.DB.Where("hotel_id = ?", hotelID).Find(&admins).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch admins"})
+		return
+	}
+
+	// Get user details for each admin
+	var response []map[string]interface{}
+	for _, admin := range admins {
+		var adminUser User
+		if err := api.DB.Where("id = ?", admin.UserID).First(&adminUser).Error; err != nil {
+			continue
+		}
+
+		response = append(response, map[string]interface{}{
+			"id":          admin.ID,
+			"hotel_id":    admin.HotelID,
+			"user_id":     admin.UserID,
+			"role":        admin.Role,
+			"permissions": admin.Permissions,
+			"assigned_by": admin.AssignedBy,
+			"created_at":  admin.CreatedAt,
+			"updated_at":  admin.UpdatedAt,
+			"user": map[string]interface{}{
+				"id":        adminUser.ID,
+				"email":     adminUser.Email,
+				"full_name": adminUser.FullName,
+				"phone":     adminUser.Phone,
+				"role":      adminUser.Role,
+				"status":    adminUser.Status,
+			},
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"admins": response})
+}
+
+// createHotelAdmin - Add new admin/staff to hotel (Super Admin only)
+func (api *API) createHotelAdmin(c *gin.Context) {
+	hotelID := c.Param("id")
+
+	// Check permission - only super admin can add staff
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	hotelIDInt := stringToInt(hotelID)
+	if user.HotelID == nil || *user.HotelID != hotelIDInt {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	// Only hotel_super_admin can add new admins
+	if user.Role != "hotel_super_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only super admin can add new staff"})
+		return
+	}
+
+	var req struct {
+		Email       string `json:"email" binding:"required,email"`
+		FullName    string `json:"full_name" binding:"required"`
+		Phone       string `json:"phone" binding:"required"`
+		Password    string `json:"password" binding:"required,min=6"`
+		Role        string `json:"role"` // staff, admin, manager
+		Permissions string `json:"permissions"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Set default role if not provided
+	if req.Role == "" {
+		req.Role = "staff"
+	}
+
+	// Check if email already exists
+	var existingUser User
+	if err := api.DB.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Email already registered"})
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	// Create user account
+	newUser := User{
+		Email:    req.Email,
+		Password: string(hashedPassword),
+		FullName: req.FullName,
+		Phone:    req.Phone,
+		Role:     "hotel_admin",
+		HotelID:  &hotelIDInt,
+		Status:   "active",
+	}
+
+	if err := api.DB.Create(&newUser).Error; err != nil {
+		log.Printf("ERROR creating user: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
+
+	// Create hotel admin entry
+	adminUserID := userID.(int)
+	hotelAdmin := HotelAdmin{
+		HotelID:     hotelIDInt,
+		UserID:      newUser.ID,
+		Role:        req.Role,
+		Permissions: req.Permissions,
+		AssignedBy:  &adminUserID,
+	}
+
+	if err := api.DB.Create(&hotelAdmin).Error; err != nil {
+		// Rollback user creation
+		api.DB.Delete(&newUser)
+		log.Printf("ERROR creating hotel admin: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create admin"})
+		return
+	}
+
+	log.Printf("✅ New admin created: %s for hotel %s by user %d", req.Email, hotelID, adminUserID)
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Admin created successfully",
+		"admin": map[string]interface{}{
+			"id":          hotelAdmin.ID,
+			"hotel_id":    hotelAdmin.HotelID,
+			"user_id":     hotelAdmin.UserID,
+			"role":        hotelAdmin.Role,
+			"permissions": hotelAdmin.Permissions,
+			"user": map[string]interface{}{
+				"id":        newUser.ID,
+				"email":     newUser.Email,
+				"full_name": newUser.FullName,
+				"phone":     newUser.Phone,
+			},
+		},
+	})
+}
+
+// updateHotelAdmin - Update admin/staff role and permissions (Super Admin only)
+func (api *API) updateHotelAdmin(c *gin.Context) {
+	hotelID := c.Param("id")
+	adminID := c.Param("admin_id")
+
+	// Check permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	hotelIDInt := stringToInt(hotelID)
+	if user.HotelID == nil || *user.HotelID != hotelIDInt {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	if user.Role != "hotel_super_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only super admin can update staff"})
+		return
+	}
+
+	var req struct {
+		Role        string `json:"role"`
+		Permissions string `json:"permissions"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	var hotelAdmin HotelAdmin
+	if err := api.DB.Where("id = ? AND hotel_id = ?", adminID, hotelID).First(&hotelAdmin).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Admin not found"})
+		return
+	}
+
+	// Update fields
+	updates := make(map[string]interface{})
+	if req.Role != "" {
+		updates["role"] = req.Role
+	}
+	if req.Permissions != "" {
+		updates["permissions"] = req.Permissions
+	}
+
+	if err := api.DB.Model(&hotelAdmin).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update admin"})
+		return
+	}
+
+	log.Printf("✅ Admin %s updated for hotel %s", adminID, hotelID)
+	c.JSON(http.StatusOK, gin.H{"message": "Admin updated successfully", "admin": hotelAdmin})
+}
+
+// deleteHotelAdmin - Remove admin/staff from hotel (Super Admin only)
+func (api *API) deleteHotelAdmin(c *gin.Context) {
+	hotelID := c.Param("id")
+	adminID := c.Param("admin_id")
+
+	// Check permission
+	userID, _ := c.Get("user_id")
+	var user User
+	if err := api.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	hotelIDInt := stringToInt(hotelID)
+	if user.HotelID == nil || *user.HotelID != hotelIDInt {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	if user.Role != "hotel_super_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only super admin can remove staff"})
+		return
+	}
+
+	var hotelAdmin HotelAdmin
+	if err := api.DB.Where("id = ? AND hotel_id = ?", adminID, hotelID).First(&hotelAdmin).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Admin not found"})
+		return
+	}
+
+	// Don't allow deleting yourself
+	if hotelAdmin.UserID == userID.(int) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot remove yourself"})
+		return
+	}
+
+	// Delete hotel_admin entry
+	if err := api.DB.Delete(&hotelAdmin).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete admin"})
+		return
+	}
+
+	// Optionally delete user account or just set status to inactive
+	var adminUser User
+	if err := api.DB.Where("id = ?", hotelAdmin.UserID).First(&adminUser).Error; err == nil {
+		api.DB.Model(&adminUser).Update("status", "inactive")
+		api.DB.Model(&adminUser).Update("hotel_id", nil)
+	}
+
+	log.Printf("✅ Admin %s removed from hotel %s", adminID, hotelID)
+	c.JSON(http.StatusOK, gin.H{"message": "Admin removed successfully"})
+}
+
+// getHotelStatistics returns statistics for hotel dashboard
+func (api *API) getHotelStatistics(c *gin.Context) {
+	hotelID := c.Param("id")
+
+	// Count total rooms
+	var totalRooms int64
+	api.DB.Model(&HotelRoom{}).Where("hotel_id = ?", hotelID).Count(&totalRooms)
+
+	// Count booked/occupied rooms
+	var bookedRooms int64
+	api.DB.Model(&HotelRoom{}).Where("hotel_id = ? AND status = ?", hotelID, "OCCUPIED").Count(&bookedRooms)
+
+	// Count pending bookings
+	var pendingBookings int64
+	api.DB.Model(&Reservation{}).Where("hotel_id = ? AND status = ?", hotelID, "PENDING").Count(&pendingBookings)
+
+	// Calculate total revenue (sum of all confirmed/completed reservations)
+	var totalRevenue float64
+	api.DB.Model(&Reservation{}).
+		Where("hotel_id = ? AND status IN ?", hotelID, []string{"CONFIRMED", "CHECKED_IN", "CHECKED_OUT"}).
+		Select("COALESCE(SUM(total_price), 0)").
+		Scan(&totalRevenue)
+
+	// Get recent bookings count by status
+	var confirmedCount, checkedInCount, checkedOutCount, cancelledCount int64
+	api.DB.Model(&Reservation{}).Where("hotel_id = ? AND status = ?", hotelID, "CONFIRMED").Count(&confirmedCount)
+	api.DB.Model(&Reservation{}).Where("hotel_id = ? AND status = ?", hotelID, "CHECKED_IN").Count(&checkedInCount)
+	api.DB.Model(&Reservation{}).Where("hotel_id = ? AND status = ?", hotelID, "CHECKED_OUT").Count(&checkedOutCount)
+	api.DB.Model(&Reservation{}).Where("hotel_id = ? AND status = ?", hotelID, "CANCELLED").Count(&cancelledCount)
+
+	c.JSON(http.StatusOK, gin.H{
+		"statistics": gin.H{
+			"totalRooms":      totalRooms,
+			"bookedRooms":     bookedRooms,
+			"totalRevenue":    totalRevenue,
+			"pendingBookings": pendingBookings,
+			"confirmedCount":  confirmedCount,
+			"checkedInCount":  checkedInCount,
+			"checkedOutCount": checkedOutCount,
+			"cancelledCount":  cancelledCount,
+		},
+	})
+}
+
+// Helper function to convert string to int
+func stringToInt(s string) int {
+	val, _ := strconv.Atoi(s)
+	return val
 }

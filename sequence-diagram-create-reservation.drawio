@@ -1,0 +1,536 @@
+<mxfile host="app.diagrams.net" modified="2025-12-06T00:00:00.000Z" agent="5.0" version="24.0.0" etag="sequence-diagram" type="device">
+  <diagram name="Sequence Diagram - Create Reservation" id="sequence-create-reservation">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- Title -->
+        <mxCell id="title" value="Sequence Diagram: Create Reservation with Blockchain Sync" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="100" y="20" width="1400" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Actors/Objects Lifelines -->
+        
+        <!-- Guest -->
+        <mxCell id="actor-guest" value="Guest" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="120" y="80" width="40" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="lifeline-guest" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="135" y="180" width="10" height="1100" as="geometry"/>
+        </mxCell>
+
+        <!-- Frontend (React) -->
+        <mxCell id="obj-frontend" value="«Frontend»&#xa;React App" style="html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="270" y="90" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lifeline-frontend" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="325" y="180" width="10" height="1100" as="geometry"/>
+        </mxCell>
+
+        <!-- API Gateway (Go) -->
+        <mxCell id="obj-api" value="«API Gateway»&#xa;Go Backend" style="html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="480" y="90" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lifeline-api" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="535" y="180" width="10" height="1100" as="geometry"/>
+        </mxCell>
+
+        <!-- Database (MySQL) -->
+        <mxCell id="obj-db" value="«Database»&#xa;MySQL" style="html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="920" y="90" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lifeline-db" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="975" y="180" width="10" height="1100" as="geometry"/>
+        </mxCell>
+
+        <!-- Fabric Client -->
+        <mxCell id="obj-fabric" value="«Blockchain»&#xa;Fabric Client" style="html=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1140" y="90" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lifeline-fabric" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1195" y="180" width="10" height="1100" as="geometry"/>
+        </mxCell>
+
+        <!-- Hyperledger Fabric Network -->
+        <mxCell id="obj-network" value="«Chaincode»&#xa;Fabric Network" style="html=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1360" y="90" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lifeline-network" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1415" y="180" width="10" height="1100" as="geometry"/>
+        </mxCell>
+
+        <!-- Auth Service -->
+        <mxCell id="obj-auth" value="«Service»&#xa;Auth Service" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="700" y="90" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lifeline-auth" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="755" y="180" width="10" height="1100" as="geometry"/>
+        </mxCell>
+
+        <!-- Messages/Interactions -->
+
+        <!-- 1. Guest opens reservation form -->
+        <mxCell id="msg1" value="1: openReservationForm()" style="html=1;verticalAlign=bottom;endArrow=block;entryX=0;entryY=0;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="145" y="200" as="sourcePoint"/>
+            <mxPoint x="325" y="200" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 2. Load hotels list -->
+        <mxCell id="msg2" value="2: GET /api/hotels" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="335" y="230" as="sourcePoint"/>
+            <mxPoint x="535" y="230" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 3. Query hotels -->
+        <mxCell id="msg3" value="3: SELECT * FROM hotels" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="260" as="sourcePoint"/>
+            <mxPoint x="975" y="260" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 4. Return hotels -->
+        <mxCell id="msg4" value="4: hotels[]" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="975" y="285" as="sourcePoint"/>
+            <mxPoint x="545" y="285" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 5. Return to frontend -->
+        <mxCell id="msg5" value="5: JSON(hotels)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="535" y="310" as="sourcePoint"/>
+            <mxPoint x="335" y="310" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 6. Display hotels -->
+        <mxCell id="msg6" value="6: displayHotels()" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="325" y="335" as="sourcePoint"/>
+            <mxPoint x="145" y="335" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 7. Guest selects hotel -->
+        <mxCell id="msg7" value="7: selectHotel(hotelId)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="145" y="375" as="sourcePoint"/>
+            <mxPoint x="325" y="375" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 8. Get room types -->
+        <mxCell id="msg8" value="8: GET /api/hotels/{id}/roomtypes" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="335" y="405" as="sourcePoint"/>
+            <mxPoint x="535" y="405" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 9. Query room types -->
+        <mxCell id="msg9" value="9: SELECT * FROM room_types WHERE hotel_id=?" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="435" as="sourcePoint"/>
+            <mxPoint x="975" y="435" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 10. Return room types -->
+        <mxCell id="msg10" value="10: roomTypes[]" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="975" y="460" as="sourcePoint"/>
+            <mxPoint x="545" y="460" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 11. Return to frontend -->
+        <mxCell id="msg11" value="11: JSON(roomTypes)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="535" y="485" as="sourcePoint"/>
+            <mxPoint x="335" y="485" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 12. Display room types -->
+        <mxCell id="msg12" value="12: displayRoomTypes()" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="325" y="510" as="sourcePoint"/>
+            <mxPoint x="145" y="510" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 13. Guest fills form -->
+        <mxCell id="msg13" value="13: fillReservationForm(data)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="145" y="550" as="sourcePoint"/>
+            <mxPoint x="325" y="550" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Note for form data -->
+        <mxCell id="note1" value="Form Data:&#xa;- dates&#xa;- guest count&#xa;- event type&#xa;- customer info" style="shape=note;whiteSpace=wrap;html=1;size=15;verticalAlign=top;align=left;spacingTop=5;spacingLeft=5;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="170" y="560" width="100" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- 14. Submit reservation -->
+        <mxCell id="msg14" value="14: POST /api/reservations" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="335" y="660" as="sourcePoint"/>
+            <mxPoint x="535" y="660" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 15. Validate JWT Token -->
+        <mxCell id="msg15" value="15: validateJWT(token)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="690" as="sourcePoint"/>
+            <mxPoint x="755" y="690" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 16. Return validation -->
+        <mxCell id="msg16" value="16: user data" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="715" as="sourcePoint"/>
+            <mxPoint x="545" y="715" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 17. Validate input data -->
+        <mxCell id="ref1" value="ref" style="shape=umlFrame;whiteSpace=wrap;html=1;width=40;height=30;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="500" y="740" width="560" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="ref1-label" value="[Validation]" style="text;html=1;align=left;verticalAlign=top;spacingLeft=5;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="505" y="745" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="msg17" value="17: validateInput(data)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="775" as="sourcePoint"/>
+            <mxPoint x="545" y="805" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="600" y="775"/>
+              <mxPoint x="600" y="805"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 18. Check room availability -->
+        <mxCell id="msg18" value="18: checkAvailability(roomTypeId, dates)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="825" as="sourcePoint"/>
+            <mxPoint x="975" y="825" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 19. Return availability -->
+        <mxCell id="msg19" value="19: available: true" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="975" y="850" as="sourcePoint"/>
+            <mxPoint x="545" y="850" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 20. Generate reservation ID -->
+        <mxCell id="msg20" value="20: generateReservationID()" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="885" as="sourcePoint"/>
+            <mxPoint x="545" y="915" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="620" y="885"/>
+              <mxPoint x="620" y="915"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 21. Calculate total price -->
+        <mxCell id="msg21" value="21: calculateTotalPrice(guests, pricePerPerson)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="940" as="sourcePoint"/>
+            <mxPoint x="545" y="970" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="650" y="940"/>
+              <mxPoint x="650" y="970"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 22. Begin DB transaction -->
+        <mxCell id="msg22" value="22: BEGIN TRANSACTION" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="1000" as="sourcePoint"/>
+            <mxPoint x="975" y="1000" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 23. Insert reservation -->
+        <mxCell id="msg23" value="23: INSERT INTO reservations..." style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="1030" as="sourcePoint"/>
+            <mxPoint x="975" y="1030" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 24. Return reservation ID -->
+        <mxCell id="msg24" value="24: reservation.id" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="975" y="1055" as="sourcePoint"/>
+            <mxPoint x="545" y="1055" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 25. Insert history -->
+        <mxCell id="msg25" value="25: INSERT INTO reservation_history..." style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="1085" as="sourcePoint"/>
+            <mxPoint x="975" y="1085" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 26. Commit transaction -->
+        <mxCell id="msg26" value="26: COMMIT" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="1115" as="sourcePoint"/>
+            <mxPoint x="975" y="1115" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Alt frame for blockchain sync -->
+        <mxCell id="alt1" value="alt" style="shape=umlFrame;whiteSpace=wrap;html=1;width=40;height=30;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1145" width="960" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="alt1-label1" value="[Blockchain Enabled]" style="text;html=1;align=left;verticalAlign=top;spacingLeft=5;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="505" y="1150" width="130" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- 27. Sync to blockchain -->
+        <mxCell id="msg27" value="27: syncToBlockchain(reservation)" style="html=1;verticalAlign=bottom;endArrow=block;strokeWidth=2;strokeColor=#b85450;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="1185" as="sourcePoint"/>
+            <mxPoint x="1195" y="1185" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 28. Prepare transaction -->
+        <mxCell id="msg28" value="28: prepareTransaction(data)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1205" y="1215" as="sourcePoint"/>
+            <mxPoint x="1205" y="1245" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="1280" y="1215"/>
+              <mxPoint x="1280" y="1245"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 29. Invoke chaincode -->
+        <mxCell id="msg29" value="29: CreateReservation(ctx, data)" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#b85450;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1205" y="1270" as="sourcePoint"/>
+            <mxPoint x="1415" y="1270" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 30. Validate and consensus -->
+        <mxCell id="msg30" value="30: validateAndConsensus()" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1425" y="1300" as="sourcePoint"/>
+            <mxPoint x="1425" y="1330" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="1490" y="1300"/>
+              <mxPoint x="1490" y="1330"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 31. Store to ledger -->
+        <mxCell id="msg31" value="31: putState(reservationID, data)" style="html=1;verticalAlign=bottom;endArrow=block;fontStyle=1" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1425" y="1355" as="sourcePoint"/>
+            <mxPoint x="1425" y="1385" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="1510" y="1355"/>
+              <mxPoint x="1510" y="1385"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 32. Return TX ID -->
+        <mxCell id="msg32" value="32: txID" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#b85450;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1415" y="1405" as="sourcePoint"/>
+            <mxPoint x="1205" y="1405" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Alt divider -->
+        <mxCell id="alt-divider" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1310" width="960" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="alt1-label2" value="[else] Blockchain Disabled - Skip" style="text;html=1;align=left;verticalAlign=top;spacingLeft=5;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="505" y="1315" width="200" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- 33. Log blockchain skip -->
+        <mxCell id="msg33" value="33: log('Blockchain sync skipped')" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="1350" as="sourcePoint"/>
+            <mxPoint x="545" y="1380" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="620" y="1350"/>
+              <mxPoint x="620" y="1380"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Return blockchain result -->
+        <mxCell id="msg34" value="34: blockchain txID (or null)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1195" y="1440" as="sourcePoint"/>
+            <mxPoint x="545" y="1440" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 35. Send email confirmation -->
+        <mxCell id="msg35" value="35: sendEmailConfirmation(reservation)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="1475" as="sourcePoint"/>
+            <mxPoint x="545" y="1505" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="670" y="1475"/>
+              <mxPoint x="670" y="1505"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 36. Return success response -->
+        <mxCell id="msg36" value="36: 201 Created - reservation object" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="535" y="1540" as="sourcePoint"/>
+            <mxPoint x="335" y="1540" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 37. Display confirmation -->
+        <mxCell id="msg37" value="37: displayConfirmation(reservation)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="325" y="1570" as="sourcePoint"/>
+            <mxPoint x="145" y="1570" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Success note -->
+        <mxCell id="note2" value="✅ Success!&#xa;Reservation saved&#xa;to both MySQL and&#xa;Blockchain (immutable)" style="shape=note;whiteSpace=wrap;html=1;size=15;verticalAlign=top;align=left;spacingTop=5;spacingLeft=5;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="180" y="1600" width="130" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Error handling frame (opt) -->
+        <mxCell id="opt1" value="opt" style="shape=umlFrame;whiteSpace=wrap;html=1;width=40;height=30;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1720" width="560" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="opt1-label" value="[Error Occurs]" style="text;html=1;align=left;verticalAlign=top;spacingLeft=5;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="505" y="1725" width="100" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- 38. Rollback transaction -->
+        <mxCell id="msg38" value="38: ROLLBACK" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#d79b00;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="545" y="1760" as="sourcePoint"/>
+            <mxPoint x="975" y="1760" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 39. Return error -->
+        <mxCell id="msg39" value="39: 400/500 Error - error message" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#d79b00;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="535" y="1795" as="sourcePoint"/>
+            <mxPoint x="335" y="1795" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 40. Display error -->
+        <mxCell id="msg40" value="40: displayError(message)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#d79b00;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="325" y="1820" as="sourcePoint"/>
+            <mxPoint x="145" y="1820" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend-box" value="LEGEND" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;strokeWidth=2;verticalAlign=top;fontSize=11;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="200" width="80" height="280" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="leg1" value="" style="html=1;verticalAlign=bottom;endArrow=block;" vertex="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1510" y="235" as="sourcePoint"/>
+            <mxPoint x="1560" y="235" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg1-label" value="Sync Call" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=5;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="220" width="60" height="15" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="leg2" value="" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" vertex="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1510" y="270" as="sourcePoint"/>
+            <mxPoint x="1560" y="270" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg2-label" value="Return" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=5;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="255" width="60" height="15" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="leg3" value="" style="html=1;verticalAlign=bottom;endArrow=block;strokeWidth=2;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1510" y="305" as="sourcePoint"/>
+            <mxPoint x="1560" y="305" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg3-label" value="Blockchain" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=5;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="290" width="60" height="15" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="leg4" value="Self Call" style="html=1;verticalAlign=bottom;endArrow=block;" vertex="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1525" y="335" as="sourcePoint"/>
+            <mxPoint x="1525" y="360" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="1555" y="335"/>
+              <mxPoint x="1555" y="360"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg4-label" value="Self Call" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=5;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="320" width="60" height="15" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="leg5" value="alt/opt" style="shape=umlFrame;whiteSpace=wrap;html=1;width=30;height=20;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="385" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg5-label" value="Fragment" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=5;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="370" width="60" height="15" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="leg-actor" value="" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1520" y="440" width="15" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg-actor-label" value="Actor" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=5;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="430" width="60" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Timing note -->
+        <mxCell id="note3" value="⏱️ Estimated Time:&#xa;- MySQL: ~50ms&#xa;- Blockchain: ~2-5s&#xa;- Total: ~3-6s" style="shape=note;whiteSpace=wrap;html=1;size=15;verticalAlign=top;align=left;spacingTop=5;spacingLeft=5;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="1500" y="520" width="120" height="90" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

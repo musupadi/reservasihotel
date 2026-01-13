@@ -1,0 +1,301 @@
+<mxfile host="app.diagrams.net" modified="2025-12-06T00:00:00.000Z" agent="5.0" version="24.0.0" etag="erd-diagram" type="device">
+  <diagram name="ERD - Hotel Reservation System" id="erd-diagram">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- Title -->
+        <mxCell id="title" value="Entity Relationship Diagram (ERD) - Hotel Reservation System" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="100" y="20" width="1200" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Users Entity -->
+        <mxCell id="entity-users" value="users" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="260" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="users-pk" value="🔑 id: INT (PK, AUTO_INCREMENT)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#0000FF;" vertex="1" parent="entity-users">
+          <mxGeometry y="30" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="users-attr" value="username: VARCHAR(100) UNIQUE&#xa;password: VARCHAR(255)&#xa;email: VARCHAR(100) UNIQUE&#xa;full_name: VARCHAR(255)&#xa;phone: VARCHAR(20)&#xa;role: VARCHAR(50) DEFAULT &#39;guest&#39;&#xa;organization: VARCHAR(100)&#xa;is_active: BOOLEAN DEFAULT TRUE&#xa;created_at: TIMESTAMP&#xa;updated_at: TIMESTAMP" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="entity-users">
+          <mxGeometry y="56" width="260" height="164" as="geometry"/>
+        </mxCell>
+        <mxCell id="users-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="entity-users">
+          <mxGeometry y="220" width="260" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="users-index" value="INDEX: idx_email (email)&#xa;INDEX: idx_username (username)&#xa;INDEX: idx_role (role)&#xa;UNIQUE: email, username" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="entity-users">
+          <mxGeometry y="228" width="260" height="82" as="geometry"/>
+        </mxCell>
+
+        <!-- Hotels Entity -->
+        <mxCell id="entity-hotels" value="hotels" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="450" y="100" width="260" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="hotels-pk" value="🔑 id: INT (PK, AUTO_INCREMENT)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#0000FF;" vertex="1" parent="entity-hotels">
+          <mxGeometry y="30" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="hotels-attr" value="name: VARCHAR(255) NOT NULL&#xa;city: VARCHAR(100) NOT NULL&#xa;address: TEXT NOT NULL&#xa;description: TEXT&#xa;rating: DECIMAL(3,2) DEFAULT 4.50&#xa;image_url: VARCHAR(500)&#xa;created_at: TIMESTAMP&#xa;updated_at: TIMESTAMP" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="entity-hotels">
+          <mxGeometry y="56" width="260" height="134" as="geometry"/>
+        </mxCell>
+        <mxCell id="hotels-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="entity-hotels">
+          <mxGeometry y="190" width="260" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="hotels-index" value="INDEX: idx_city (city)&#xa;INDEX: idx_name (name)&#xa;INDEX: idx_rating (rating)&#xa;&#xa;Sample: 21 hotels&#xa;(Bandung, Bogor, Bali, Jakarta, etc)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="entity-hotels">
+          <mxGeometry y="198" width="260" height="112" as="geometry"/>
+        </mxCell>
+
+        <!-- Room Types Entity -->
+        <mxCell id="entity-roomtypes" value="room_types" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="800" y="100" width="300" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="roomtypes-pk" value="🔑 id: INT (PK, AUTO_INCREMENT)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#0000FF;" vertex="1" parent="entity-roomtypes">
+          <mxGeometry y="30" width="300" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="roomtypes-fk" value="🔗 hotel_id: INT (FK → hotels.id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#FF6B6B;" vertex="1" parent="entity-roomtypes">
+          <mxGeometry y="56" width="300" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="roomtypes-attr" value="type_name: VARCHAR(100) NOT NULL&#xa;description: TEXT&#xa;price_per_person: DECIMAL(12,2) NOT NULL&#xa;min_capacity: INT DEFAULT 10&#xa;max_capacity: INT DEFAULT 100&#xa;available_rooms: INT DEFAULT 10&#xa;amenities: TEXT&#xa;created_at: TIMESTAMP&#xa;updated_at: TIMESTAMP" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="entity-roomtypes">
+          <mxGeometry y="82" width="300" height="154" as="geometry"/>
+        </mxCell>
+        <mxCell id="roomtypes-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="entity-roomtypes">
+          <mxGeometry y="236" width="300" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="roomtypes-index" value="INDEX: idx_hotel_id (hotel_id)&#xa;INDEX: idx_price (price_per_person)&#xa;FOREIGN KEY: hotel_id → hotels(id)&#xa;&#xa;Package Types:&#xa;- Residential Meeting Single&#xa;- Residential Meeting Twin Share" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="entity-roomtypes">
+          <mxGeometry y="244" width="300" height="136" as="geometry"/>
+        </mxCell>
+
+        <!-- Reservations Entity -->
+        <mxCell id="entity-reservations" value="reservations" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="420" y="550" width="320" height="580" as="geometry"/>
+        </mxCell>
+        <mxCell id="reservations-pk" value="🔑 id: INT (PK, AUTO_INCREMENT)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#0000FF;" vertex="1" parent="entity-reservations">
+          <mxGeometry y="30" width="320" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="reservations-unique" value="🔸 reservation_id: VARCHAR(100) UNIQUE" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#9900FF;" vertex="1" parent="entity-reservations">
+          <mxGeometry y="56" width="320" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="reservations-fk1" value="🔗 hotel_id: INT (FK → hotels.id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#FF6B6B;" vertex="1" parent="entity-reservations">
+          <mxGeometry y="82" width="320" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="reservations-fk2" value="🔗 room_type_id: INT (FK → room_types.id)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#FF6B6B;" vertex="1" parent="entity-reservations">
+          <mxGeometry y="108" width="320" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="reservations-attr" value="check_in: DATE NOT NULL&#xa;check_out: DATE NOT NULL&#xa;guest_count: INT NOT NULL&#xa;event_type: VARCHAR(50) DEFAULT &#39;Meeting&#39;&#xa;event_description: TEXT&#xa;customer_name: VARCHAR(100) NOT NULL&#xa;customer_phone: VARCHAR(20) NOT NULL&#xa;customer_email: VARCHAR(100)&#xa;customer_ref: VARCHAR(100)&#xa;price_per_person: DECIMAL(12,2) NOT NULL&#xa;total_price: DECIMAL(12,2) NOT NULL&#xa;currency: VARCHAR(10) DEFAULT &#39;IDR&#39;&#xa;status: VARCHAR(50) DEFAULT &#39;PENDING&#39;&#xa;created_by_org: VARCHAR(100)&#xa;created_at: TIMESTAMP&#xa;updated_at: TIMESTAMP" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="entity-reservations">
+          <mxGeometry y="134" width="320" height="266" as="geometry"/>
+        </mxCell>
+        <mxCell id="reservations-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="entity-reservations">
+          <mxGeometry y="400" width="320" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="reservations-index" value="UNIQUE: reservation_id&#xa;INDEX: idx_hotel_id (hotel_id)&#xa;INDEX: idx_room_type_id (room_type_id)&#xa;INDEX: idx_status (status)&#xa;INDEX: idx_check_in (check_in)&#xa;INDEX: idx_customer_email (customer_email)&#xa;FOREIGN KEY: hotel_id → hotels(id)&#xa;FOREIGN KEY: room_type_id → room_types(id)&#xa;&#xa;Status: PENDING, CONFIRMED, &#xa;        CHECKED_IN, CHECKED_OUT, CANCELLED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="entity-reservations">
+          <mxGeometry y="408" width="320" height="172" as="geometry"/>
+        </mxCell>
+
+        <!-- Reservation History Entity -->
+        <mxCell id="entity-history" value="reservation_history" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="850" y="640" width="300" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="history-pk" value="🔑 id: INT (PK, AUTO_INCREMENT)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#0000FF;" vertex="1" parent="entity-history">
+          <mxGeometry y="30" width="300" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="history-fk" value="🔗 reservation_id: VARCHAR(100) (FK)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontStyle=1;fontColor=#FF6B6B;" vertex="1" parent="entity-history">
+          <mxGeometry y="56" width="300" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="history-attr" value="action: VARCHAR(50) NOT NULL&#xa;status: VARCHAR(50) NOT NULL&#xa;note: TEXT&#xa;performed_by: VARCHAR(100)&#xa;performed_at: TIMESTAMP" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="entity-history">
+          <mxGeometry y="82" width="300" height="88" as="geometry"/>
+        </mxCell>
+        <mxCell id="history-line" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="entity-history">
+          <mxGeometry y="170" width="300" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="history-index" value="INDEX: idx_reservation_id (reservation_id)&#xa;INDEX: idx_performed_at (performed_at)&#xa;FOREIGN KEY: reservation_id → &#xa;             reservations(reservation_id)&#xa;&#xa;Actions: CREATED, CONFIRMED, &#xa;         CHECKED_IN, CHECKED_OUT, CANCELLED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="entity-history">
+          <mxGeometry y="178" width="300" height="122" as="geometry"/>
+        </mxCell>
+
+        <!-- Relationships -->
+
+        <!-- Hotels 1:N Room Types -->
+        <mxCell id="rel1" edge="1" parent="1" source="entity-hotels" target="entity-roomtypes">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel1-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="-0.8" y="1" relative="1" as="geometry">
+            <mxPoint x="-5" y="-10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel1-label2" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="0.8" y="1" relative="1" as="geometry">
+            <mxPoint x="5" y="-10" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel1-label3" value="has" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=2;fillColor=#ffffff;" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="0.02" y="2" relative="1" as="geometry">
+            <mxPoint y="-12" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Hotels 1:N Reservations -->
+        <mxCell id="rel2" edge="1" parent="1" source="entity-hotels" target="entity-reservations">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="480"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel2-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="-0.85" y="1" relative="1" as="geometry">
+            <mxPoint x="-8" y="15" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel2-label2" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="0.8" y="1" relative="1" as="geometry">
+            <mxPoint x="8" y="-8" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel2-label3" value="receives" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=2;fillColor=#ffffff;" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry">
+            <mxPoint x="25" y="2" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Room Types 1:N Reservations -->
+        <mxCell id="rel3" edge="1" parent="1" source="entity-roomtypes" target="entity-reservations">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="520"/>
+              <mxPoint x="740" y="520"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel3-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="-0.88" y="1" relative="1" as="geometry">
+            <mxPoint x="8" y="15" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel3-label2" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="0.85" y="1" relative="1" as="geometry">
+            <mxPoint x="-8" y="-8" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel3-label3" value="used in" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=2;fillColor=#ffffff;" vertex="1" connectable="0" parent="rel3">
+          <mxGeometry x="0.1" y="2" relative="1" as="geometry">
+            <mxPoint x="30" y="2" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Reservations 1:N History -->
+        <mxCell id="rel4" edge="1" parent="1" source="entity-reservations" target="entity-history">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rel4-label1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="-0.8" y="1" relative="1" as="geometry">
+            <mxPoint x="-8" y="-8" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4-label2" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="0.8" y="1" relative="1" as="geometry">
+            <mxPoint x="8" y="-8" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4-label3" value="tracks" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=2;fillColor=#ffffff;" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="0.05" y="2" relative="1" as="geometry">
+            <mxPoint y="-12" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Users 0:N Reservations (optional) -->
+        <mxCell id="rel5" edge="1" parent="1" source="entity-users" target="entity-reservations" style="dashed=1;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="480"/>
+              <mxPoint x="420" y="480"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel5-label1" value="0..1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel5">
+          <mxGeometry x="-0.88" y="1" relative="1" as="geometry">
+            <mxPoint x="-8" y="15" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel5-label2" value="*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontStyle=1;fontColor=#000000;" vertex="1" connectable="0" parent="rel5">
+          <mxGeometry x="0.85" y="1" relative="1" as="geometry">
+            <mxPoint x="8" y="-8" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel5-label3" value="creates&#xa;(optional)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=2;fillColor=#ffffff;" vertex="1" connectable="0" parent="rel5">
+          <mxGeometry x="0.1" y="2" relative="1" as="geometry">
+            <mxPoint x="20" y="-5" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Blockchain Note -->
+        <mxCell id="blockchain-note" value="⛓️ BLOCKCHAIN INTEGRATION" style="shape=note;whiteSpace=wrap;html=1;size=20;verticalAlign=top;align=left;spacingTop=10;spacingLeft=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="100" y="480" width="260" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="blockchain-note-text" value="Every reservation record is&#xa;automatically synced to&#xa;Hyperledger Fabric for:&#xa;&#xa;✓ Immutable audit trail&#xa;✓ Consensus validation&#xa;✓ Distributed ledger&#xa;✓ Transparency" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=10;spacingTop=5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="530" width="240" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Database Info -->
+        <mxCell id="db-info" value="📊 DATABASE INFO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;verticalAlign=top;fontSize=12;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="680" width="260" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="db-info-text" value="Engine: InnoDB&#xa;Charset: utf8mb4&#xa;Collation: utf8mb4_general_ci&#xa;&#xa;Total Tables: 5&#xa;- users&#xa;- hotels (21 records)&#xa;- room_types (42 records)&#xa;- reservations&#xa;- reservation_history&#xa;&#xa;Auto Timestamps: ON&#xa;Foreign Keys: CASCADE" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="710" width="240" height="160" as="geometry"/>
+        </mxCell>
+
+        <!-- Cardinality Legend -->
+        <mxCell id="legend-box" value="LEGEND" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;strokeWidth=2;verticalAlign=top;fontSize=12;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="920" width="260" height="210" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="legend1" value="🔑 Primary Key (PK)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;fontColor=#0000FF;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="110" y="950" width="240" height="25" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="legend2" value="🔗 Foreign Key (FK)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;fontColor=#FF6B6B;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="110" y="980" width="240" height="25" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="legend3" value="🔸 Unique Key" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;fontColor=#9900FF;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="110" y="1010" width="240" height="25" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="legend4" value="1      One" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="110" y="1040" width="240" height="25" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="legend5" value="*      Many" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="110" y="1065" width="240" height="25" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="legend6" value="0..1   Optional (may be NULL)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="110" y="1090" width="240" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- Business Rules -->
+        <mxCell id="rules-box" value="📋 BUSINESS RULES" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;verticalAlign=top;fontSize=12;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1160" width="260" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="rules-text" value="1. reservation_id must be unique&#xa;   Format: RES-YYYYMMDD-XXXX&#xa;&#xa;2. guest_count must be between&#xa;   min_capacity and max_capacity&#xa;&#xa;3. check_out &gt; check_in&#xa;&#xa;4. Price calculation:&#xa;   total_price = price_per_person&#xa;                 × guest_count&#xa;&#xa;5. Status flow:&#xa;   PENDING → CONFIRMED →&#xa;   CHECKED_IN → CHECKED_OUT" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="1190" width="240" height="160" as="geometry"/>
+        </mxCell>
+
+        <!-- Indexes Summary -->
+        <mxCell id="indexes-box" value="🔍 KEY INDEXES" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;verticalAlign=top;fontSize=12;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1000" width="300" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="indexes-text" value="hotels:&#xa;- idx_city, idx_name, idx_rating&#xa;&#xa;room_types:&#xa;- idx_hotel_id, idx_price&#xa;&#xa;reservations:&#xa;- idx_hotel_id, idx_room_type_id&#xa;- idx_status, idx_check_in&#xa;- idx_customer_email&#xa;&#xa;reservation_history:&#xa;- idx_reservation_id, idx_performed_at" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1030" width="280" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Sample Data Note -->
+        <mxCell id="sample-note" value="💾 SAMPLE DATA" style="shape=note;whiteSpace=wrap;html=1;size=20;verticalAlign=top;align=left;spacingTop=10;spacingLeft=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="420" y="1180" width="320" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="sample-text" value="Hotels: 21 properties across&#xa;Indonesia (Bandung, Bogor,&#xa;Bali, Jakarta, Yogyakarta, Puncak)&#xa;&#xa;Room Types: 42 packages&#xa;- Single: IDR 800K - 3.1M&#xa;- Twin Share: IDR 650K - 2.5M&#xa;&#xa;Capacity: 10-200 guests&#xa;Package includes: Meeting room,&#xa;meals, coffee breaks, amenities&#xa;&#xa;Event Types: Meeting, Seminar,&#xa;Birthday, Wedding, Corporate" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=10;spacingTop=5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1230" width="300" height="140" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

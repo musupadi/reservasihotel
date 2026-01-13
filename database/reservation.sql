@@ -35,6 +35,11 @@ CREATE TABLE `hotels` (
   `description` text DEFAULT NULL,
   `rating` decimal(3,2) DEFAULT 4.50,
   `image_url` varchar(500) DEFAULT NULL,
+  `owner_id` int(11) DEFAULT NULL COMMENT 'Super admin user ID',
+  `owner_name` varchar(255) DEFAULT NULL,
+  `owner_phone` varchar(20) DEFAULT NULL,
+  `owner_email` varchar(255) DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'active' COMMENT 'active, inactive, pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -69,6 +74,248 @@ INSERT INTO `hotels` (`id`, `name`, `city`, `address`, `description`, `rating`, 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `hotel_rooms`
+--
+
+CREATE TABLE `hotel_rooms` (
+  `id` int(11) NOT NULL,
+  `hotel_id` int(11) NOT NULL,
+  `room_type_id` int(11) NOT NULL,
+  `room_number` varchar(20) NOT NULL COMMENT 'Nomor kamar: 101, 102, 201, etc',
+  `floor` int(11) DEFAULT 1 COMMENT 'Lantai berapa',
+  `is_blockchain_enabled` tinyint(1) DEFAULT 1 COMMENT '1=bisa booking blockchain, 0=hanya walk-in',
+  `status` varchar(20) DEFAULT 'AVAILABLE' COMMENT 'AVAILABLE, MAINTENANCE, BLOCKED',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Sample data for table `hotel_rooms`
+-- Format: 5 kamar pertama = walk-in only (is_blockchain_enabled=0), sisanya = blockchain enabled (is_blockchain_enabled=1)
+--
+
+INSERT INTO `hotel_rooms` (`hotel_id`, `room_type_id`, `room_number`, `floor`, `is_blockchain_enabled`, `status`) VALUES
+-- Hotel 1: L'Eminence Golf - Residential Meeting Single (5 rooms)
+(1, 1, '101', 1, 0, 'AVAILABLE'), (1, 1, '102', 1, 0, 'AVAILABLE'), (1, 1, '103', 1, 0, 'AVAILABLE'), 
+(1, 1, '104', 1, 0, 'AVAILABLE'), (1, 1, '105', 1, 0, 'AVAILABLE'),
+-- Hotel 1: L'Eminence Golf - Residential Meeting Twin Share (10 rooms: 5 walk-in + 5 blockchain)
+(1, 2, '201', 2, 0, 'AVAILABLE'), (1, 2, '202', 2, 0, 'AVAILABLE'), (1, 2, '203', 2, 0, 'AVAILABLE'), 
+(1, 2, '204', 2, 0, 'AVAILABLE'), (1, 2, '205', 2, 0, 'AVAILABLE'),
+(1, 2, '206', 2, 1, 'AVAILABLE'), (1, 2, '207', 2, 1, 'AVAILABLE'), (1, 2, '208', 2, 1, 'AVAILABLE'), 
+(1, 2, '209', 2, 1, 'AVAILABLE'), (1, 2, '210', 2, 1, 'AVAILABLE'),
+
+-- Hotel 2: Padma Hotel - Residential Meeting Single (5 rooms)
+(2, 3, '301', 3, 0, 'AVAILABLE'), (2, 3, '302', 3, 0, 'AVAILABLE'), (2, 3, '303', 3, 0, 'AVAILABLE'), 
+(2, 3, '304', 3, 0, 'AVAILABLE'), (2, 3, '305', 3, 0, 'AVAILABLE'),
+-- Hotel 2: Padma Hotel - Residential Meeting Twin Share (10 rooms)
+(2, 4, '401', 4, 0, 'AVAILABLE'), (2, 4, '402', 4, 0, 'AVAILABLE'), (2, 4, '403', 4, 0, 'AVAILABLE'), 
+(2, 4, '404', 4, 0, 'AVAILABLE'), (2, 4, '405', 4, 0, 'AVAILABLE'),
+(2, 4, '406', 4, 1, 'AVAILABLE'), (2, 4, '407', 4, 1, 'AVAILABLE'), (2, 4, '408', 4, 1, 'AVAILABLE'), 
+(2, 4, '409', 4, 1, 'AVAILABLE'), (2, 4, '410', 4, 1, 'AVAILABLE'),
+
+-- Hotel 3: Grand Sunshine Resort - Residential Meeting Single (8 rooms)
+(3, 5, '101', 1, 0, 'AVAILABLE'), (3, 5, '102', 1, 0, 'AVAILABLE'), (3, 5, '103', 1, 0, 'AVAILABLE'), 
+(3, 5, '104', 1, 0, 'AVAILABLE'), (3, 5, '105', 1, 0, 'AVAILABLE'),
+(3, 5, '106', 1, 1, 'AVAILABLE'), (3, 5, '107', 1, 1, 'AVAILABLE'), (3, 5, '108', 1, 1, 'AVAILABLE'),
+-- Hotel 3: Grand Sunshine Resort - Residential Meeting Twin Share (15 rooms)
+(3, 6, '201', 2, 0, 'AVAILABLE'), (3, 6, '202', 2, 0, 'AVAILABLE'), (3, 6, '203', 2, 0, 'AVAILABLE'), 
+(3, 6, '204', 2, 0, 'AVAILABLE'), (3, 6, '205', 2, 0, 'AVAILABLE'),
+(3, 6, '206', 2, 1, 'AVAILABLE'), (3, 6, '207', 2, 1, 'AVAILABLE'), (3, 6, '208', 2, 1, 'AVAILABLE'), 
+(3, 6, '209', 2, 1, 'AVAILABLE'), (3, 6, '210', 2, 1, 'AVAILABLE'),
+(3, 6, '211', 2, 1, 'AVAILABLE'), (3, 6, '212', 2, 1, 'AVAILABLE'), (3, 6, '213', 2, 1, 'AVAILABLE'), 
+(3, 6, '214', 2, 1, 'AVAILABLE'), (3, 6, '215', 2, 1, 'AVAILABLE'),
+
+-- Hotel 4: Grand Panorama - Residential Meeting Single (5 rooms)
+(4, 7, '501', 5, 0, 'AVAILABLE'), (4, 7, '502', 5, 0, 'AVAILABLE'), (4, 7, '503', 5, 0, 'AVAILABLE'), 
+(4, 7, '504', 5, 0, 'AVAILABLE'), (4, 7, '505', 5, 0, 'AVAILABLE'),
+-- Hotel 4: Grand Panorama - Residential Meeting Twin Share (10 rooms)
+(4, 8, '601', 6, 0, 'AVAILABLE'), (4, 8, '602', 6, 0, 'AVAILABLE'), (4, 8, '603', 6, 0, 'AVAILABLE'), 
+(4, 8, '604', 6, 0, 'AVAILABLE'), (4, 8, '605', 6, 0, 'AVAILABLE'),
+(4, 8, '606', 6, 1, 'AVAILABLE'), (4, 8, '607', 6, 1, 'AVAILABLE'), (4, 8, '608', 6, 1, 'AVAILABLE'), 
+(4, 8, '609', 6, 1, 'AVAILABLE'), (4, 8, '610', 6, 1, 'AVAILABLE'),
+
+-- Hotel 5: Pullman Bandung - Residential Meeting Single (10 rooms)
+(5, 9, '701', 7, 0, 'AVAILABLE'), (5, 9, '702', 7, 0, 'AVAILABLE'), (5, 9, '703', 7, 0, 'AVAILABLE'), 
+(5, 9, '704', 7, 0, 'AVAILABLE'), (5, 9, '705', 7, 0, 'AVAILABLE'),
+(5, 9, '706', 7, 1, 'AVAILABLE'), (5, 9, '707', 7, 1, 'AVAILABLE'), (5, 9, '708', 7, 1, 'AVAILABLE'), 
+(5, 9, '709', 7, 1, 'AVAILABLE'), (5, 9, '710', 7, 1, 'AVAILABLE'),
+-- Hotel 5: Pullman Bandung - Residential Meeting Twin Share (15 rooms)
+(5, 10, '801', 8, 0, 'AVAILABLE'), (5, 10, '802', 8, 0, 'AVAILABLE'), (5, 10, '803', 8, 0, 'AVAILABLE'), 
+(5, 10, '804', 8, 0, 'AVAILABLE'), (5, 10, '805', 8, 0, 'AVAILABLE'),
+(5, 10, '806', 8, 1, 'AVAILABLE'), (5, 10, '807', 8, 1, 'AVAILABLE'), (5, 10, '808', 8, 1, 'AVAILABLE'), 
+(5, 10, '809', 8, 1, 'AVAILABLE'), (5, 10, '810', 8, 1, 'AVAILABLE'),
+(5, 10, '811', 8, 1, 'AVAILABLE'), (5, 10, '812', 8, 1, 'AVAILABLE'), (5, 10, '813', 8, 1, 'AVAILABLE'), 
+(5, 10, '814', 8, 1, 'AVAILABLE'), (5, 10, '815', 8, 1, 'AVAILABLE'),
+
+-- Hotel 6: Trans Luxury - Residential Meeting Single (8 rooms)
+(6, 11, '901', 9, 0, 'AVAILABLE'), (6, 11, '902', 9, 0, 'AVAILABLE'), (6, 11, '903', 9, 0, 'AVAILABLE'), 
+(6, 11, '904', 9, 0, 'AVAILABLE'), (6, 11, '905', 9, 0, 'AVAILABLE'),
+(6, 11, '906', 9, 1, 'AVAILABLE'), (6, 11, '907', 9, 1, 'AVAILABLE'), (6, 11, '908', 9, 1, 'AVAILABLE'),
+-- Hotel 6: Trans Luxury - Residential Meeting Twin Share (12 rooms)
+(6, 12, '1001', 10, 0, 'AVAILABLE'), (6, 12, '1002', 10, 0, 'AVAILABLE'), (6, 12, '1003', 10, 0, 'AVAILABLE'), 
+(6, 12, '1004', 10, 0, 'AVAILABLE'), (6, 12, '1005', 10, 0, 'AVAILABLE'),
+(6, 12, '1006', 10, 1, 'AVAILABLE'), (6, 12, '1007', 10, 1, 'AVAILABLE'), (6, 12, '1008', 10, 1, 'AVAILABLE'), 
+(6, 12, '1009', 10, 1, 'AVAILABLE'), (6, 12, '1010', 10, 1, 'AVAILABLE'),
+(6, 12, '1011', 10, 1, 'AVAILABLE'), (6, 12, '1012', 10, 1, 'AVAILABLE'),
+
+-- Hotel 7: Jayakarta Suites - Residential Meeting Single (4 rooms)
+(7, 13, '1101', 11, 0, 'AVAILABLE'), (7, 13, '1102', 11, 0, 'AVAILABLE'), (7, 13, '1103', 11, 0, 'AVAILABLE'), 
+(7, 13, '1104', 11, 0, 'AVAILABLE'),
+-- Hotel 7: Jayakarta Suites - Residential Meeting Twin Share (8 rooms)
+(7, 14, '1201', 12, 0, 'AVAILABLE'), (7, 14, '1202', 12, 0, 'AVAILABLE'), (7, 14, '1203', 12, 0, 'AVAILABLE'), 
+(7, 14, '1204', 12, 0, 'AVAILABLE'), (7, 14, '1205', 12, 0, 'AVAILABLE'),
+(7, 14, '1206', 12, 1, 'AVAILABLE'), (7, 14, '1207', 12, 1, 'AVAILABLE'), (7, 14, '1208', 12, 1, 'AVAILABLE'),
+
+-- Hotel 8: Mason Pine - Residential Meeting Single (6 rooms)
+(8, 15, '1301', 13, 0, 'AVAILABLE'), (8, 15, '1302', 13, 0, 'AVAILABLE'), (8, 15, '1303', 13, 0, 'AVAILABLE'), 
+(8, 15, '1304', 13, 0, 'AVAILABLE'), (8, 15, '1305', 13, 0, 'AVAILABLE'),
+(8, 15, '1306', 13, 1, 'AVAILABLE'),
+-- Hotel 8: Mason Pine - Residential Meeting Twin Share (12 rooms)
+(8, 16, '1401', 14, 0, 'AVAILABLE'), (8, 16, '1402', 14, 0, 'AVAILABLE'), (8, 16, '1403', 14, 0, 'AVAILABLE'), 
+(8, 16, '1404', 14, 0, 'AVAILABLE'), (8, 16, '1405', 14, 0, 'AVAILABLE'),
+(8, 16, '1406', 14, 1, 'AVAILABLE'), (8, 16, '1407', 14, 1, 'AVAILABLE'), (8, 16, '1408', 14, 1, 'AVAILABLE'), 
+(8, 16, '1409', 14, 1, 'AVAILABLE'), (8, 16, '1410', 14, 1, 'AVAILABLE'),
+(8, 16, '1411', 14, 1, 'AVAILABLE'), (8, 16, '1412', 14, 1, 'AVAILABLE'),
+
+-- Hotel 9: R Hotel Rancamaya - Residential Meeting Single (5 rooms)
+(9, 17, '101', 1, 0, 'AVAILABLE'), (9, 17, '102', 1, 0, 'AVAILABLE'), (9, 17, '103', 1, 0, 'AVAILABLE'), 
+(9, 17, '104', 1, 0, 'AVAILABLE'), (9, 17, '105', 1, 0, 'AVAILABLE'),
+-- Hotel 9: R Hotel Rancamaya - Residential Meeting Twin Share (10 rooms)
+(9, 18, '201', 2, 0, 'AVAILABLE'), (9, 18, '202', 2, 0, 'AVAILABLE'), (9, 18, '203', 2, 0, 'AVAILABLE'), 
+(9, 18, '204', 2, 0, 'AVAILABLE'), (9, 18, '205', 2, 0, 'AVAILABLE'),
+(9, 18, '206', 2, 1, 'AVAILABLE'), (9, 18, '207', 2, 1, 'AVAILABLE'), (9, 18, '208', 2, 1, 'AVAILABLE'), 
+(9, 18, '209', 2, 1, 'AVAILABLE'), (9, 18, '210', 2, 1, 'AVAILABLE'),
+
+-- Hotel 10: Royal Tulip - Residential Meeting Single (5 rooms)
+(10, 19, '301', 3, 0, 'AVAILABLE'), (10, 19, '302', 3, 0, 'AVAILABLE'), (10, 19, '303', 3, 0, 'AVAILABLE'), 
+(10, 19, '304', 3, 0, 'AVAILABLE'), (10, 19, '305', 3, 0, 'AVAILABLE'),
+-- Hotel 10: Royal Tulip - Residential Meeting Twin Share (10 rooms)
+(10, 20, '401', 4, 0, 'AVAILABLE'), (10, 20, '402', 4, 0, 'AVAILABLE'), (10, 20, '403', 4, 0, 'AVAILABLE'), 
+(10, 20, '404', 4, 0, 'AVAILABLE'), (10, 20, '405', 4, 0, 'AVAILABLE'),
+(10, 20, '406', 4, 1, 'AVAILABLE'), (10, 20, '407', 4, 1, 'AVAILABLE'), (10, 20, '408', 4, 1, 'AVAILABLE'), 
+(10, 20, '409', 4, 1, 'AVAILABLE'), (10, 20, '410', 4, 1, 'AVAILABLE'),
+
+-- Hotel 11: Novotel Bogor - Residential Meeting Single (6 rooms)
+(11, 21, '501', 5, 0, 'AVAILABLE'), (11, 21, '502', 5, 0, 'AVAILABLE'), (11, 21, '503', 5, 0, 'AVAILABLE'), 
+(11, 21, '504', 5, 0, 'AVAILABLE'), (11, 21, '505', 5, 0, 'AVAILABLE'),
+(11, 21, '506', 5, 1, 'AVAILABLE'),
+-- Hotel 11: Novotel Bogor - Residential Meeting Twin Share (12 rooms)
+(11, 22, '601', 6, 0, 'AVAILABLE'), (11, 22, '602', 6, 0, 'AVAILABLE'), (11, 22, '603', 6, 0, 'AVAILABLE'), 
+(11, 22, '604', 6, 0, 'AVAILABLE'), (11, 22, '605', 6, 0, 'AVAILABLE'),
+(11, 22, '606', 6, 1, 'AVAILABLE'), (11, 22, '607', 6, 1, 'AVAILABLE'), (11, 22, '608', 6, 1, 'AVAILABLE'), 
+(11, 22, '609', 6, 1, 'AVAILABLE'), (11, 22, '610', 6, 1, 'AVAILABLE'),
+(11, 22, '611', 6, 1, 'AVAILABLE'), (11, 22, '612', 6, 1, 'AVAILABLE'),
+
+-- Hotel 12: Pesona Alam - Residential Meeting Single (4 rooms)
+(12, 23, '701', 7, 0, 'AVAILABLE'), (12, 23, '702', 7, 0, 'AVAILABLE'), (12, 23, '703', 7, 0, 'AVAILABLE'), 
+(12, 23, '704', 7, 0, 'AVAILABLE'),
+-- Hotel 12: Pesona Alam - Residential Meeting Twin Share (8 rooms)
+(12, 24, '801', 8, 0, 'AVAILABLE'), (12, 24, '802', 8, 0, 'AVAILABLE'), (12, 24, '803', 8, 0, 'AVAILABLE'), 
+(12, 24, '804', 8, 0, 'AVAILABLE'), (12, 24, '805', 8, 0, 'AVAILABLE'),
+(12, 24, '806', 8, 1, 'AVAILABLE'), (12, 24, '807', 8, 1, 'AVAILABLE'), (12, 24, '808', 8, 1, 'AVAILABLE'),
+
+-- Hotel 13: Aston Bogor - Residential Meeting Single (7 rooms)
+(13, 25, '901', 9, 0, 'AVAILABLE'), (13, 25, '902', 9, 0, 'AVAILABLE'), (13, 25, '903', 9, 0, 'AVAILABLE'), 
+(13, 25, '904', 9, 0, 'AVAILABLE'), (13, 25, '905', 9, 0, 'AVAILABLE'),
+(13, 25, '906', 9, 1, 'AVAILABLE'), (13, 25, '907', 9, 1, 'AVAILABLE'),
+-- Hotel 13: Aston Bogor - Residential Meeting Twin Share (14 rooms)
+(13, 26, '1001', 10, 0, 'AVAILABLE'), (13, 26, '1002', 10, 0, 'AVAILABLE'), (13, 26, '1003', 10, 0, 'AVAILABLE'), 
+(13, 26, '1004', 10, 0, 'AVAILABLE'), (13, 26, '1005', 10, 0, 'AVAILABLE'),
+(13, 26, '1006', 10, 1, 'AVAILABLE'), (13, 26, '1007', 10, 1, 'AVAILABLE'), (13, 26, '1008', 10, 1, 'AVAILABLE'), 
+(13, 26, '1009', 10, 1, 'AVAILABLE'), (13, 26, '1010', 10, 1, 'AVAILABLE'),
+(13, 26, '1011', 10, 1, 'AVAILABLE'), (13, 26, '1012', 10, 1, 'AVAILABLE'), (13, 26, '1013', 10, 1, 'AVAILABLE'), 
+(13, 26, '1014', 10, 1, 'AVAILABLE'),
+
+-- Hotel 14: Renaissance Bali - Residential Meeting Single (8 rooms)
+(14, 27, '101', 1, 0, 'AVAILABLE'), (14, 27, '102', 1, 0, 'AVAILABLE'), (14, 27, '103', 1, 0, 'AVAILABLE'), 
+(14, 27, '104', 1, 0, 'AVAILABLE'), (14, 27, '105', 1, 0, 'AVAILABLE'),
+(14, 27, '106', 1, 1, 'AVAILABLE'), (14, 27, '107', 1, 1, 'AVAILABLE'), (14, 27, '108', 1, 1, 'AVAILABLE'),
+-- Hotel 14: Renaissance Bali - Residential Meeting Twin Share (15 rooms)
+(14, 28, '201', 2, 0, 'AVAILABLE'), (14, 28, '202', 2, 0, 'AVAILABLE'), (14, 28, '203', 2, 0, 'AVAILABLE'), 
+(14, 28, '204', 2, 0, 'AVAILABLE'), (14, 28, '205', 2, 0, 'AVAILABLE'),
+(14, 28, '206', 2, 1, 'AVAILABLE'), (14, 28, '207', 2, 1, 'AVAILABLE'), (14, 28, '208', 2, 1, 'AVAILABLE'), 
+(14, 28, '209', 2, 1, 'AVAILABLE'), (14, 28, '210', 2, 1, 'AVAILABLE'),
+(14, 28, '211', 2, 1, 'AVAILABLE'), (14, 28, '212', 2, 1, 'AVAILABLE'), (14, 28, '213', 2, 1, 'AVAILABLE'), 
+(14, 28, '214', 2, 1, 'AVAILABLE'), (14, 28, '215', 2, 1, 'AVAILABLE'),
+
+-- Hotel 15: Holiday Inn Bali - Residential Meeting Single (6 rooms)
+(15, 29, '301', 3, 0, 'AVAILABLE'), (15, 29, '302', 3, 0, 'AVAILABLE'), (15, 29, '303', 3, 0, 'AVAILABLE'), 
+(15, 29, '304', 3, 0, 'AVAILABLE'), (15, 29, '305', 3, 0, 'AVAILABLE'),
+(15, 29, '306', 3, 1, 'AVAILABLE'),
+-- Hotel 15: Holiday Inn Bali - Residential Meeting Twin Share (12 rooms)
+(15, 30, '401', 4, 0, 'AVAILABLE'), (15, 30, '402', 4, 0, 'AVAILABLE'), (15, 30, '403', 4, 0, 'AVAILABLE'), 
+(15, 30, '404', 4, 0, 'AVAILABLE'), (15, 30, '405', 4, 0, 'AVAILABLE'),
+(15, 30, '406', 4, 1, 'AVAILABLE'), (15, 30, '407', 4, 1, 'AVAILABLE'), (15, 30, '408', 4, 1, 'AVAILABLE'), 
+(15, 30, '409', 4, 1, 'AVAILABLE'), (15, 30, '410', 4, 1, 'AVAILABLE'),
+(15, 30, '411', 4, 1, 'AVAILABLE'), (15, 30, '412', 4, 1, 'AVAILABLE'),
+
+-- Hotel 16: Kuta Beach Heritage - Residential Meeting Single (5 rooms)
+(16, 31, '501', 5, 0, 'AVAILABLE'), (16, 31, '502', 5, 0, 'AVAILABLE'), (16, 31, '503', 5, 0, 'AVAILABLE'), 
+(16, 31, '504', 5, 0, 'AVAILABLE'), (16, 31, '505', 5, 0, 'AVAILABLE'),
+-- Hotel 16: Kuta Beach Heritage - Residential Meeting Twin Share (10 rooms)
+(16, 32, '601', 6, 0, 'AVAILABLE'), (16, 32, '602', 6, 0, 'AVAILABLE'), (16, 32, '603', 6, 0, 'AVAILABLE'), 
+(16, 32, '604', 6, 0, 'AVAILABLE'), (16, 32, '605', 6, 0, 'AVAILABLE'),
+(16, 32, '606', 6, 1, 'AVAILABLE'), (16, 32, '607', 6, 1, 'AVAILABLE'), (16, 32, '608', 6, 1, 'AVAILABLE'), 
+(16, 32, '609', 6, 1, 'AVAILABLE'), (16, 32, '610', 6, 1, 'AVAILABLE'),
+
+-- Hotel 17: Grand Mirage Bali - Residential Meeting Single (6 rooms)
+(17, 33, '701', 7, 0, 'AVAILABLE'), (17, 33, '702', 7, 0, 'AVAILABLE'), (17, 33, '703', 7, 0, 'AVAILABLE'), 
+(17, 33, '704', 7, 0, 'AVAILABLE'), (17, 33, '705', 7, 0, 'AVAILABLE'),
+(17, 33, '706', 7, 1, 'AVAILABLE'),
+-- Hotel 17: Grand Mirage Bali - Residential Meeting Twin Share (12 rooms)
+(17, 34, '801', 8, 0, 'AVAILABLE'), (17, 34, '802', 8, 0, 'AVAILABLE'), (17, 34, '803', 8, 0, 'AVAILABLE'), 
+(17, 34, '804', 8, 0, 'AVAILABLE'), (17, 34, '805', 8, 0, 'AVAILABLE'),
+(17, 34, '806', 8, 1, 'AVAILABLE'), (17, 34, '807', 8, 1, 'AVAILABLE'), (17, 34, '808', 8, 1, 'AVAILABLE'), 
+(17, 34, '809', 8, 1, 'AVAILABLE'), (17, 34, '810', 8, 1, 'AVAILABLE'),
+(17, 34, '811', 8, 1, 'AVAILABLE'), (17, 34, '812', 8, 1, 'AVAILABLE'),
+
+-- Hotel 18: Hotel Mulia - Residential Meeting Single (10 rooms)
+(18, 35, '101', 1, 0, 'AVAILABLE'), (18, 35, '102', 1, 0, 'AVAILABLE'), (18, 35, '103', 1, 0, 'AVAILABLE'), 
+(18, 35, '104', 1, 0, 'AVAILABLE'), (18, 35, '105', 1, 0, 'AVAILABLE'),
+(18, 35, '106', 1, 1, 'AVAILABLE'), (18, 35, '107', 1, 1, 'AVAILABLE'), (18, 35, '108', 1, 1, 'AVAILABLE'), 
+(18, 35, '109', 1, 1, 'AVAILABLE'), (18, 35, '110', 1, 1, 'AVAILABLE'),
+-- Hotel 18: Hotel Mulia - Residential Meeting Twin Share (20 rooms)
+(18, 36, '201', 2, 0, 'AVAILABLE'), (18, 36, '202', 2, 0, 'AVAILABLE'), (18, 36, '203', 2, 0, 'AVAILABLE'), 
+(18, 36, '204', 2, 0, 'AVAILABLE'), (18, 36, '205', 2, 0, 'AVAILABLE'),
+(18, 36, '206', 2, 1, 'AVAILABLE'), (18, 36, '207', 2, 1, 'AVAILABLE'), (18, 36, '208', 2, 1, 'AVAILABLE'), 
+(18, 36, '209', 2, 1, 'AVAILABLE'), (18, 36, '210', 2, 1, 'AVAILABLE'),
+(18, 36, '211', 2, 1, 'AVAILABLE'), (18, 36, '212', 2, 1, 'AVAILABLE'), (18, 36, '213', 2, 1, 'AVAILABLE'), 
+(18, 36, '214', 2, 1, 'AVAILABLE'), (18, 36, '215', 2, 1, 'AVAILABLE'),
+(18, 36, '216', 2, 1, 'AVAILABLE'), (18, 36, '217', 2, 1, 'AVAILABLE'), (18, 36, '218', 2, 1, 'AVAILABLE'), 
+(18, 36, '219', 2, 1, 'AVAILABLE'), (18, 36, '220', 2, 1, 'AVAILABLE'),
+
+-- Hotel 19: Hotel Borobudur - Residential Meeting Single (8 rooms)
+(19, 37, '301', 3, 0, 'AVAILABLE'), (19, 37, '302', 3, 0, 'AVAILABLE'), (19, 37, '303', 3, 0, 'AVAILABLE'), 
+(19, 37, '304', 3, 0, 'AVAILABLE'), (19, 37, '305', 3, 0, 'AVAILABLE'),
+(19, 37, '306', 3, 1, 'AVAILABLE'), (19, 37, '307', 3, 1, 'AVAILABLE'), (19, 37, '308', 3, 1, 'AVAILABLE'),
+-- Hotel 19: Hotel Borobudur - Residential Meeting Twin Share (15 rooms)
+(19, 38, '401', 4, 0, 'AVAILABLE'), (19, 38, '402', 4, 0, 'AVAILABLE'), (19, 38, '403', 4, 0, 'AVAILABLE'), 
+(19, 38, '404', 4, 0, 'AVAILABLE'), (19, 38, '405', 4, 0, 'AVAILABLE'),
+(19, 38, '406', 4, 1, 'AVAILABLE'), (19, 38, '407', 4, 1, 'AVAILABLE'), (19, 38, '408', 4, 1, 'AVAILABLE'), 
+(19, 38, '409', 4, 1, 'AVAILABLE'), (19, 38, '410', 4, 1, 'AVAILABLE'),
+(19, 38, '411', 4, 1, 'AVAILABLE'), (19, 38, '412', 4, 1, 'AVAILABLE'), (19, 38, '413', 4, 1, 'AVAILABLE'), 
+(19, 38, '414', 4, 1, 'AVAILABLE'), (19, 38, '415', 4, 1, 'AVAILABLE'),
+
+-- Hotel 20: Jambuluwuk Malioboro - Residential Meeting Single (5 rooms)
+(20, 39, '501', 5, 0, 'AVAILABLE'), (20, 39, '502', 5, 0, 'AVAILABLE'), (20, 39, '503', 5, 0, 'AVAILABLE'), 
+(20, 39, '504', 5, 0, 'AVAILABLE'), (20, 39, '505', 5, 0, 'AVAILABLE'),
+-- Hotel 20: Jambuluwuk Malioboro - Residential Meeting Twin Share (10 rooms)
+(20, 40, '601', 6, 0, 'AVAILABLE'), (20, 40, '602', 6, 0, 'AVAILABLE'), (20, 40, '603', 6, 0, 'AVAILABLE'), 
+(20, 40, '604', 6, 0, 'AVAILABLE'), (20, 40, '605', 6, 0, 'AVAILABLE'),
+(20, 40, '606', 6, 1, 'AVAILABLE'), (20, 40, '607', 6, 1, 'AVAILABLE'), (20, 40, '608', 6, 1, 'AVAILABLE'), 
+(20, 40, '609', 6, 1, 'AVAILABLE'), (20, 40, '610', 6, 1, 'AVAILABLE'),
+
+-- Hotel 21: Green Peak Puncak - Residential Meeting Single (4 rooms)
+(21, 41, '701', 7, 0, 'AVAILABLE'), (21, 41, '702', 7, 0, 'AVAILABLE'), (21, 41, '703', 7, 0, 'AVAILABLE'), 
+(21, 41, '704', 7, 0, 'AVAILABLE'),
+-- Hotel 21: Green Peak Puncak - Residential Meeting Twin Share (8 rooms)
+(21, 42, '801', 8, 0, 'AVAILABLE'), (21, 42, '802', 8, 0, 'AVAILABLE'), (21, 42, '803', 8, 0, 'AVAILABLE'), 
+(21, 42, '804', 8, 0, 'AVAILABLE'), (21, 42, '805', 8, 0, 'AVAILABLE'),
+(21, 42, '806', 8, 1, 'AVAILABLE'), (21, 42, '807', 8, 1, 'AVAILABLE'), (21, 42, '808', 8, 1, 'AVAILABLE');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `reservations`
 --
 
@@ -80,6 +327,7 @@ CREATE TABLE `reservations` (
   `check_in` date NOT NULL,
   `check_out` date NOT NULL,
   `guest_count` int(11) NOT NULL COMMENT 'Jumlah peserta meeting/event',
+  `total_rooms_needed` int(11) NOT NULL DEFAULT 1 COMMENT 'Jumlah kamar yang dibutuhkan',
   `event_type` varchar(50) DEFAULT 'Meeting' COMMENT 'Meeting, Seminar, Birthday, Wedding, dll',
   `event_description` text DEFAULT NULL COMMENT 'Detail acara: ultah, meeting, dll',
   `customer_name` varchar(100) NOT NULL,
@@ -91,6 +339,24 @@ CREATE TABLE `reservations` (
   `currency` varchar(10) DEFAULT 'IDR',
   `status` varchar(50) DEFAULT 'PENDING',
   `created_by_org` varchar(100) DEFAULT 'OTAOrgMSP',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room_reservations`
+--
+
+CREATE TABLE `room_reservations` (
+  `id` int(11) NOT NULL,
+  `reservation_id` varchar(100) NOT NULL,
+  `hotel_room_id` int(11) NOT NULL,
+  `check_in` date NOT NULL,
+  `check_out` date NOT NULL,
+  `guest_names` text DEFAULT NULL COMMENT 'Nama tamu yang menempati kamar ini (JSON array)',
+  `status` varchar(20) DEFAULT 'BOOKED' COMMENT 'BOOKED, CHECKED_IN, CHECKED_OUT, CANCELLED',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -125,7 +391,9 @@ CREATE TABLE `room_types` (
   `price_per_person` decimal(12,2) NOT NULL COMMENT 'Harga per orang untuk meeting package',
   `min_capacity` int(11) NOT NULL DEFAULT 10 COMMENT 'Minimum peserta',
   `max_capacity` int(11) NOT NULL DEFAULT 100 COMMENT 'Maximum peserta',
-  `available_rooms` int(11) DEFAULT 10,
+  `total_rooms` int(11) DEFAULT 10 COMMENT 'Total kamar yang tersedia di hotel',
+  `blockchain_reserved_rooms` int(11) DEFAULT 5 COMMENT 'Jumlah kamar yang TIDAK bisa di-booking blockchain (untuk walk-in)',
+  `available_rooms` int(11) DEFAULT 10 COMMENT 'Legacy field - akan dihitung dari hotel_rooms',
   `amenities` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -192,6 +460,17 @@ ALTER TABLE `hotels`
   ADD KEY `idx_name` (`name`);
 
 --
+-- Indexes for table `hotel_rooms`
+--
+ALTER TABLE `hotel_rooms`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_room_number` (`hotel_id`,`room_number`),
+  ADD KEY `idx_hotel_id` (`hotel_id`),
+  ADD KEY `idx_room_type_id` (`room_type_id`),
+  ADD KEY `idx_blockchain_enabled` (`is_blockchain_enabled`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `reservations`
 --
 ALTER TABLE `reservations`
@@ -203,6 +482,16 @@ ALTER TABLE `reservations`
   ADD KEY `idx_check_in` (`check_in`),
   ADD KEY `idx_hotel_id` (`hotel_id`),
   ADD KEY `idx_event_type` (`event_type`);
+
+--
+-- Indexes for table `room_reservations`
+--
+ALTER TABLE `room_reservations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_reservation_id` (`reservation_id`),
+  ADD KEY `idx_hotel_room_id` (`hotel_room_id`),
+  ADD KEY `idx_dates` (`check_in`,`check_out`),
+  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `reservation_history`
@@ -227,6 +516,12 @@ ALTER TABLE `room_types`
 --
 
 --
+-- AUTO_INCREMENT for table `hotel_rooms`
+--
+ALTER TABLE `hotel_rooms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `hotels`
 --
 ALTER TABLE `hotels`
@@ -245,6 +540,12 @@ ALTER TABLE `reservation_history`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `room_reservations`
+--
+ALTER TABLE `room_reservations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `room_types`
 --
 ALTER TABLE `room_types`
@@ -253,6 +554,13 @@ ALTER TABLE `room_types`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `hotel_rooms`
+--
+ALTER TABLE `hotel_rooms`
+  ADD CONSTRAINT `hotel_rooms_ibfk_1` FOREIGN KEY (`hotel_id`) REFERENCES `hotels` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `hotel_rooms_ibfk_2` FOREIGN KEY (`room_type_id`) REFERENCES `room_types` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `reservations`
@@ -266,6 +574,13 @@ ALTER TABLE `reservations`
 --
 ALTER TABLE `reservation_history`
   ADD CONSTRAINT `reservation_history_ibfk_1` FOREIGN KEY (`reservation_id`) REFERENCES `reservations` (`reservation_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `room_reservations`
+--
+ALTER TABLE `room_reservations`
+  ADD CONSTRAINT `room_reservations_ibfk_1` FOREIGN KEY (`reservation_id`) REFERENCES `reservations` (`reservation_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `room_reservations_ibfk_2` FOREIGN KEY (`hotel_room_id`) REFERENCES `hotel_rooms` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `room_types`
