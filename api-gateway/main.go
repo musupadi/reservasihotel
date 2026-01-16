@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -62,13 +63,18 @@ type Hotel struct {
 	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
 
-// RoomType represents a room type - UPDATED untuk Meeting Package
+// RoomType represents a room type - UPDATED untuk Meeting Package & Meeting Rooms
 type RoomType struct {
 	ID             int       `json:"id" gorm:"primaryKey;column:id"`
 	HotelID        int       `json:"hotel_id" gorm:"column:hotel_id"`
 	TypeName       string    `json:"type_name" gorm:"column:type_name"`
+	RoomCategory   string    `json:"room_category" gorm:"column:room_category;default:'hotel_room'"` // hotel_room or meeting_room
 	Description    string    `json:"description" gorm:"column:description"`
-	PricePerPerson float64   `json:"price_per_person" gorm:"column:price_per_person"`
+	PricePerPerson float64   `json:"price_per_person" gorm:"column:price_per_person"`             // For hotel rooms (per night)
+	PricingType    string    `json:"pricing_type" gorm:"column:pricing_type;default:'per_night'"` // per_night, per_hour, half_day, full_day
+	HourlyRate     *float64  `json:"hourly_rate" gorm:"column:hourly_rate"`                       // For meeting rooms
+	HalfDayRate    *float64  `json:"half_day_rate" gorm:"column:half_day_rate"`                   // For meeting rooms (4 hours)
+	FullDayRate    *float64  `json:"full_day_rate" gorm:"column:full_day_rate"`                   // For meeting rooms (8 hours)
 	MinCapacity    int       `json:"min_capacity" gorm:"column:min_capacity"`
 	MaxCapacity    int       `json:"max_capacity" gorm:"column:max_capacity"`
 	Amenities      string    `json:"amenities" gorm:"column:amenities"`
@@ -96,16 +102,19 @@ func (HotelRoom) TableName() string {
 
 // RoomReservation represents room reservation mapping
 type RoomReservation struct {
-	ID            int       `json:"id" gorm:"primaryKey;column:id"`
-	ReservationID string    `json:"reservation_id" gorm:"column:reservation_id"`
-	HotelRoomID   int       `json:"hotel_room_id" gorm:"column:hotel_room_id"`
-	CheckIn       time.Time `json:"check_in" gorm:"column:check_in"`
-	CheckOut      time.Time `json:"check_out" gorm:"column:check_out"`
-	GuestNames    string    `json:"guest_names" gorm:"column:guest_names"`
-	Status        string    `json:"status" gorm:"column:status"`
-	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt     time.Time `json:"updated_at" gorm:"column:updated_at"`
-	HotelRoom     HotelRoom `json:"hotel_room" gorm:"foreignKey:HotelRoomID"`
+	ID                   int             `json:"id" gorm:"primaryKey;column:id"`
+	ReservationID        string          `json:"reservation_id" gorm:"column:reservation_id"`
+	HotelRoomID          int             `json:"hotel_room_id" gorm:"column:hotel_room_id"`
+	CheckIn              time.Time       `json:"check_in" gorm:"column:check_in"`
+	CheckOut             time.Time       `json:"check_out" gorm:"column:check_out"`
+	GuestNames           string          `json:"guest_names" gorm:"column:guest_names"`
+	Status               string          `json:"status" gorm:"column:status"`
+	StartTime            sql.NullString  `json:"start_time" gorm:"column:start_time"`
+	EndTime              sql.NullString  `json:"end_time" gorm:"column:end_time"`
+	BookingDurationHours sql.NullFloat64 `json:"booking_duration_hours" gorm:"column:booking_duration_hours"`
+	CreatedAt            time.Time       `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt            time.Time       `json:"updated_at" gorm:"column:updated_at"`
+	HotelRoom            HotelRoom       `json:"hotel_room" gorm:"foreignKey:HotelRoomID"`
 }
 
 func (RoomReservation) TableName() string {
@@ -315,6 +324,7 @@ func (api *API) setupRoutes() {
 
 		// Room selection routes - NEW!
 		v1.GET("/hotels/:id/room-types/:room_type_id/available-rooms", api.getAvailableRooms)
+		v1.GET("/hotels/:id/rooms-with-status", api.getRoomsWithStatus) // NEW: Cinema-style room map
 
 		// Price calculation endpoint - NEW!
 		v1.POST("/calculate-price", api.calculatePrice)
@@ -331,6 +341,12 @@ func (api *API) setupRoutes() {
 		v1.POST("/reservations/:id/checkin", api.checkinReservation)
 		v1.POST("/reservations/:id/checkout", api.checkoutReservation)
 		v1.GET("/reservations/hotel/:hotelId", api.getHotelReservations)
+
+		// Room Layout routes
+		v1.GET("/hotels/:id/layout/:floor", api.getRoomLayoutByFloor)
+		v1.PUT("/hotels/:id/layout", api.authMiddleware(), api.updateRoomLayout)
+		v1.POST("/hotels/:id/layout/auto-arrange", api.authMiddleware(), api.autoArrangeLayout)
+		v1.DELETE("/hotels/:id/layout/reset", api.authMiddleware(), api.resetRoomLayout)
 
 		// Blockchain routes
 		v1.GET("/blockchain/stats", api.getBlockchainStats)
@@ -547,6 +563,145 @@ func (api *API) getAvailableRooms(c *gin.Context) {
 	})
 }
 
+// getRoomsWithStatus - Cinema-style room availability map
+func (api *API) getRoomsWithStatus(c *gin.Context) {
+	hotelID := c.Param("id")
+	checkIn := c.Query("check_in")
+	checkOut := c.Query("check_out")
+	roomTypeIDStr := c.Query("room_type_id")
+
+	// Parse dates if provided
+	var checkInDate, checkOutDate time.Time
+	var err error
+	if checkIn != "" && checkOut != "" {
+		checkInDate, err = time.Parse("2006-01-02", checkIn)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid check_in date format. Use YYYY-MM-DD"})
+			return
+		}
+		checkOutDate, err = time.Parse("2006-01-02", checkOut)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid check_out date format. Use YYYY-MM-DD"})
+			return
+		}
+	}
+
+	// Build query for rooms
+	query := api.DB.Table("hotel_rooms").
+		Select("hotel_rooms.*, room_types.type_name, room_types.price_per_person, room_types.max_capacity, room_types.room_category, room_types.pricing_type, room_types.hourly_rate, room_types.half_day_rate, room_types.full_day_rate").
+		Joins("LEFT JOIN room_types ON hotel_rooms.room_type_id = room_types.id").
+		Where("hotel_rooms.hotel_id = ?", hotelID)
+
+	if roomTypeIDStr != "" {
+		query = query.Where("hotel_rooms.room_type_id = ?", roomTypeIDStr)
+	}
+
+	var rooms []struct {
+		ID                  int      `json:"id"`
+		HotelID             int      `json:"hotel_id"`
+		RoomTypeID          int      `json:"room_type_id"`
+		RoomNumber          string   `json:"room_number"`
+		Floor               int      `json:"floor"`
+		IsBlockchainEnabled bool     `json:"is_blockchain_enabled"`
+		Status              string   `json:"status"`
+		TypeName            string   `json:"type_name"`
+		PricePerPerson      float64  `json:"price_per_person"`
+		MaxCapacity         int      `json:"max_capacity"`
+		RoomCategory        string   `json:"room_category"`
+		PricingType         string   `json:"pricing_type"`
+		HourlyRate          *float64 `json:"hourly_rate"`
+		HalfDayRate         *float64 `json:"half_day_rate"`
+		FullDayRate         *float64 `json:"full_day_rate"`
+		LayoutX             *int     `json:"layout_x"`
+		LayoutY             *int     `json:"layout_y"`
+		LayoutWidth         *int     `json:"layout_width"`
+		LayoutHeight        *int     `json:"layout_height"`
+	}
+
+	if err := query.Order("room_types.id, hotel_rooms.room_number").Find(&rooms).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch rooms"})
+		return
+	}
+
+	// Get booked room IDs if dates provided
+	bookedRoomIDs := make(map[int]bool)
+	if checkIn != "" && checkOut != "" {
+		var bookedIDs []int
+		api.DB.Table("room_reservations").
+			Select("DISTINCT hotel_room_id").
+			Where("check_in < ? AND check_out > ? AND status NOT IN (?)",
+				checkOutDate, checkInDate, []string{"CANCELLED", "CHECKED_OUT"}).
+			Pluck("hotel_room_id", &bookedIDs)
+
+		for _, id := range bookedIDs {
+			bookedRoomIDs[id] = true
+		}
+	}
+
+	// Build response with availability status
+	type RoomWithStatus struct {
+		ID                  int      `json:"id"`
+		HotelID             int      `json:"hotel_id"`
+		RoomTypeID          int      `json:"room_type_id"`
+		RoomNumber          string   `json:"room_number"`
+		Floor               int      `json:"floor"`
+		IsBlockchainEnabled bool     `json:"is_blockchain_enabled"`
+		Status              string   `json:"status"`
+		TypeName            string   `json:"type_name"`
+		PricePerPerson      float64  `json:"price_per_person"`
+		MaxCapacity         int      `json:"max_capacity"`
+		RoomCategory        string   `json:"room_category"`
+		PricingType         string   `json:"pricing_type"`
+		HourlyRate          *float64 `json:"hourly_rate"`
+		HalfDayRate         *float64 `json:"half_day_rate"`
+		FullDayRate         *float64 `json:"full_day_rate"`
+		LayoutX             *int     `json:"layout_x"`
+		LayoutY             *int     `json:"layout_y"`
+		LayoutWidth         *int     `json:"layout_width"`
+		LayoutHeight        *int     `json:"layout_height"`
+		IsAvailable         bool     `json:"is_available"`
+		IsBooked            bool     `json:"is_booked"`
+	}
+
+	var roomsWithStatus []RoomWithStatus
+	for _, room := range rooms {
+		isBooked := bookedRoomIDs[room.ID]
+		isAvailable := room.Status == "AVAILABLE" && room.IsBlockchainEnabled && !isBooked
+
+		roomsWithStatus = append(roomsWithStatus, RoomWithStatus{
+			ID:                  room.ID,
+			HotelID:             room.HotelID,
+			RoomTypeID:          room.RoomTypeID,
+			RoomNumber:          room.RoomNumber,
+			Floor:               room.Floor,
+			IsBlockchainEnabled: room.IsBlockchainEnabled,
+			Status:              room.Status,
+			TypeName:            room.TypeName,
+			PricePerPerson:      room.PricePerPerson,
+			MaxCapacity:         room.MaxCapacity,
+			RoomCategory:        room.RoomCategory,
+			PricingType:         room.PricingType,
+			HourlyRate:          room.HourlyRate,
+			HalfDayRate:         room.HalfDayRate,
+			FullDayRate:         room.FullDayRate,
+			LayoutX:             room.LayoutX,
+			LayoutY:             room.LayoutY,
+			LayoutWidth:         room.LayoutWidth,
+			LayoutHeight:        room.LayoutHeight,
+			IsAvailable:         isAvailable,
+			IsBooked:            isBooked,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"rooms":     roomsWithStatus,
+		"total":     len(roomsWithStatus),
+		"check_in":  checkIn,
+		"check_out": checkOut,
+		"has_dates": checkIn != "" && checkOut != "",
+	})
+}
+
 // calculatePrice - NEW! Endpoint untuk simulasi kalkulasi harga
 func (api *API) calculatePrice(c *gin.Context) {
 	var req struct {
@@ -619,19 +774,23 @@ func (api *API) calculatePrice(c *gin.Context) {
 // Reservation handlers with hybrid blockchain support
 func (api *API) createReservation(c *gin.Context) {
 	var req struct {
-		ReservationID    string `json:"reservation_id"`
-		HotelID          string `json:"hotel_id"`
-		RoomTypeID       string `json:"room_type_id"`
-		CheckIn          string `json:"check_in"`
-		CheckOut         string `json:"check_out"`
-		GuestCount       int    `json:"guest_count"`
-		EventType        string `json:"event_type"`
-		EventDescription string `json:"event_description"`
-		CustomerName     string `json:"customer_name"`
-		CustomerPhone    string `json:"customer_phone"`
-		CustomerEmail    string `json:"customer_email"`
-		CustomerRef      string `json:"customer_ref"`
-		SelectedRoomIDs  []int  `json:"selected_room_ids"` // NEW: Array of hotel_room IDs
+		ReservationID        string  `json:"reservation_id"`
+		HotelID              string  `json:"hotel_id"`
+		RoomTypeID           string  `json:"room_type_id"`
+		CheckIn              string  `json:"check_in"`
+		CheckOut             string  `json:"check_out"`
+		GuestCount           int     `json:"guest_count"`
+		EventType            string  `json:"event_type"`
+		EventDescription     string  `json:"event_description"`
+		CustomerName         string  `json:"customer_name"`
+		CustomerPhone        string  `json:"customer_phone"`
+		CustomerEmail        string  `json:"customer_email"`
+		CustomerRef          string  `json:"customer_ref"`
+		SelectedRoomIDs      []int   `json:"selected_room_ids"`      // NEW: Array of hotel_room IDs
+		StartTime            string  `json:"start_time"`             // NEW: For meeting rooms
+		EndTime              string  `json:"end_time"`               // NEW: For meeting rooms
+		BookingDurationHours float64 `json:"booking_duration_hours"` // NEW: For meeting rooms
+		PricingType          string  `json:"pricing_type"`           // NEW: For meeting rooms (hourly/half_day/full_day)
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -683,9 +842,10 @@ func (api *API) createReservation(c *gin.Context) {
 	}
 
 	// Verify all selected rooms are available and blockchain-enabled
+	// Allow mixed booking: remove room_type_id constraint for flexibility
 	var selectedRooms []HotelRoom
-	if err := api.DB.Where("id IN (?) AND hotel_id = ? AND room_type_id = ? AND is_blockchain_enabled = ? AND status = ?",
-		req.SelectedRoomIDs, hotelID, roomTypeID, true, "AVAILABLE").
+	if err := api.DB.Where("id IN (?) AND hotel_id = ? AND is_blockchain_enabled = ? AND status = ?",
+		req.SelectedRoomIDs, hotelID, true, "AVAILABLE").
 		Find(&selectedRooms).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify selected rooms"})
 		return
@@ -716,31 +876,57 @@ func (api *API) createReservation(c *gin.Context) {
 	// 	}
 	// }
 
-	// Get room type for price calculation
-	var roomType RoomType
-	if err := api.DB.First(&roomType, roomTypeID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Room type not found"})
-		return
+	// Calculate price based on room types (support mixed booking)
+	var totalPrice float64
+	var pricePerPerson float64 // Store reference price (for backward compatibility)
+
+	// Get room types for all selected rooms
+	roomTypeMap := make(map[int]*RoomType)
+	for _, room := range selectedRooms {
+		if _, exists := roomTypeMap[room.RoomTypeID]; !exists {
+			var rt RoomType
+			if err := api.DB.First(&rt, room.RoomTypeID).Error; err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Room type %d not found", room.RoomTypeID)})
+				return
+			}
+			roomTypeMap[room.RoomTypeID] = &rt
+		}
 	}
 
-	// Validate capacity
-	if req.GuestCount < roomType.MinCapacity {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": fmt.Sprintf("Minimum capacity for this package is %d guests", roomType.MinCapacity),
-		})
-		return
-	}
+	// Calculate total price for each room
+	for _, room := range selectedRooms {
+		roomType := roomTypeMap[room.RoomTypeID]
 
-	if req.GuestCount > roomType.MaxCapacity {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": fmt.Sprintf("Maximum capacity for this package is %d guests", roomType.MaxCapacity),
-		})
-		return
+		if roomType.RoomCategory == "meeting_room" {
+			// Meeting room pricing
+			var rate float64
+			switch req.PricingType {
+			case "hourly", "per_hour":
+				if roomType.HourlyRate != nil {
+					rate = *roomType.HourlyRate
+				}
+			case "half_day":
+				if roomType.HalfDayRate != nil {
+					rate = *roomType.HalfDayRate
+				}
+			case "full_day":
+				if roomType.FullDayRate != nil {
+					rate = *roomType.FullDayRate
+				}
+			default:
+				// Default to hourly if not specified
+				if roomType.HourlyRate != nil {
+					rate = *roomType.HourlyRate
+				}
+			}
+			totalPrice += rate
+			pricePerPerson = rate // Store rate for reference
+		} else {
+			// Hotel room pricing (per person per night)
+			pricePerPerson = roomType.PricePerPerson
+			totalPrice += float64(req.GuestCount) * pricePerPerson
+		}
 	}
-
-	// AUTO CALCULATE PRICE!
-	pricePerPerson := roomType.PricePerPerson
-	totalPrice := float64(req.GuestCount) * pricePerPerson
 
 	// Default event type
 	eventType := req.EventType
@@ -788,12 +974,15 @@ func (api *API) createReservation(c *gin.Context) {
 	// Create room reservations for each selected room
 	for _, roomID := range req.SelectedRoomIDs {
 		roomReservation := RoomReservation{
-			ReservationID: req.ReservationID,
-			HotelRoomID:   roomID,
-			CheckIn:       checkIn,
-			CheckOut:      checkOut,
-			GuestNames:    "", // Optional field
-			Status:        "BOOKED",
+			ReservationID:        req.ReservationID,
+			HotelRoomID:          roomID,
+			CheckIn:              checkIn,
+			CheckOut:             checkOut,
+			GuestNames:           "", // Optional field
+			Status:               "BOOKED",
+			StartTime:            sql.NullString{String: req.StartTime, Valid: req.StartTime != ""},
+			EndTime:              sql.NullString{String: req.EndTime, Valid: req.EndTime != ""},
+			BookingDurationHours: sql.NullFloat64{Float64: req.BookingDurationHours, Valid: req.BookingDurationHours > 0},
 		}
 		if err := tx.Create(&roomReservation).Error; err != nil {
 			tx.Rollback()
@@ -1652,6 +1841,14 @@ func (api *API) authMiddleware() gin.HandlerFunc {
 		c.Set("user_email", claims.Email)
 		c.Set("user_role", claims.Role)
 		c.Set("user", user) // Set full user object
+
+		// Set hotel_id from user if available
+		if user.HotelID != nil {
+			c.Set("hotel_id", *user.HotelID)
+		} else {
+			c.Set("hotel_id", 0)
+		}
+
 		c.Next()
 	}
 }
@@ -2319,12 +2516,17 @@ func (api *API) createRoomType(c *gin.Context) {
 	}
 
 	var req struct {
-		TypeName       string  `json:"type_name" binding:"required"`
-		Description    string  `json:"description"`
-		PricePerPerson float64 `json:"price_per_person" binding:"required"`
-		MinCapacity    int     `json:"min_capacity" binding:"required"`
-		MaxCapacity    int     `json:"max_capacity" binding:"required"`
-		Amenities      string  `json:"amenities"`
+		TypeName       string   `json:"type_name" binding:"required"`
+		RoomCategory   string   `json:"room_category"` // hotel_room or meeting_room
+		Description    string   `json:"description"`
+		PricePerPerson float64  `json:"price_per_person"` // For hotel rooms
+		PricingType    string   `json:"pricing_type"`     // per_night, per_hour, half_day, full_day
+		HourlyRate     *float64 `json:"hourly_rate"`      // For meeting rooms
+		HalfDayRate    *float64 `json:"half_day_rate"`    // For meeting rooms
+		FullDayRate    *float64 `json:"full_day_rate"`    // For meeting rooms
+		MinCapacity    int      `json:"min_capacity" binding:"required"`
+		MaxCapacity    int      `json:"max_capacity" binding:"required"`
+		Amenities      string   `json:"amenities"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -2332,11 +2534,31 @@ func (api *API) createRoomType(c *gin.Context) {
 		return
 	}
 
+	// Set defaults
+	roomCategory := req.RoomCategory
+	if roomCategory == "" {
+		roomCategory = "hotel_room"
+	}
+
+	pricingType := req.PricingType
+	if pricingType == "" {
+		if roomCategory == "meeting_room" {
+			pricingType = "per_hour"
+		} else {
+			pricingType = "per_night"
+		}
+	}
+
 	roomType := RoomType{
 		HotelID:        stringToInt(hotelID),
 		TypeName:       req.TypeName,
+		RoomCategory:   roomCategory,
 		Description:    req.Description,
 		PricePerPerson: req.PricePerPerson,
+		PricingType:    pricingType,
+		HourlyRate:     req.HourlyRate,
+		HalfDayRate:    req.HalfDayRate,
+		FullDayRate:    req.FullDayRate,
 		MinCapacity:    req.MinCapacity,
 		MaxCapacity:    req.MaxCapacity,
 		Amenities:      req.Amenities,
@@ -2379,8 +2601,13 @@ func (api *API) updateRoomType(c *gin.Context) {
 
 	var req struct {
 		TypeName                *string  `json:"type_name"`
+		RoomCategory            *string  `json:"room_category"` // hotel_room or meeting_room
 		Description             *string  `json:"description"`
 		PricePerPerson          *float64 `json:"price_per_person"`
+		PricingType             *string  `json:"pricing_type"` // per_night, per_hour, half_day, full_day
+		HourlyRate              *float64 `json:"hourly_rate"`
+		HalfDayRate             *float64 `json:"half_day_rate"`
+		FullDayRate             *float64 `json:"full_day_rate"`
 		MinCapacity             *int     `json:"min_capacity"`
 		MaxCapacity             *int     `json:"max_capacity"`
 		TotalRooms              *int     `json:"total_rooms"`
@@ -2398,11 +2625,26 @@ func (api *API) updateRoomType(c *gin.Context) {
 	if req.TypeName != nil {
 		updates["type_name"] = *req.TypeName
 	}
+	if req.RoomCategory != nil {
+		updates["room_category"] = *req.RoomCategory
+	}
 	if req.Description != nil {
 		updates["description"] = *req.Description
 	}
 	if req.PricePerPerson != nil {
 		updates["price_per_person"] = *req.PricePerPerson
+	}
+	if req.PricingType != nil {
+		updates["pricing_type"] = *req.PricingType
+	}
+	if req.HourlyRate != nil {
+		updates["hourly_rate"] = *req.HourlyRate
+	}
+	if req.HalfDayRate != nil {
+		updates["half_day_rate"] = *req.HalfDayRate
+	}
+	if req.FullDayRate != nil {
+		updates["full_day_rate"] = *req.FullDayRate
 	}
 	if req.MinCapacity != nil {
 		updates["min_capacity"] = *req.MinCapacity
@@ -2813,4 +3055,316 @@ func (api *API) getHotelStatistics(c *gin.Context) {
 func stringToInt(s string) int {
 	val, _ := strconv.Atoi(s)
 	return val
+}
+
+// ===== ROOM LAYOUT HANDLERS =====
+
+// RoomLayout represents room position on floor plan
+type RoomLayout struct {
+	ID                  int        `json:"id"`
+	HotelID             int        `json:"hotel_id"`
+	RoomNumber          string     `json:"room_number"`
+	RoomTypeID          int        `json:"room_type_id"`
+	RoomTypeName        string     `json:"room_type_name"`
+	Floor               int        `json:"floor"`
+	Status              string     `json:"status"`
+	IsBlockchainEnabled bool       `json:"is_blockchain_enabled"`
+	LayoutX             *int       `json:"layout_x"`
+	LayoutY             *int       `json:"layout_y"`
+	LayoutWidth         int        `json:"layout_width"`
+	LayoutHeight        int        `json:"layout_height"`
+	LayoutUpdatedAt     *time.Time `json:"layout_updated_at,omitempty"`
+}
+
+type LayoutUpdateRequest struct {
+	Updates []struct {
+		RoomID       int  `json:"room_id"`
+		LayoutX      *int `json:"layout_x"`
+		LayoutY      *int `json:"layout_y"`
+		LayoutWidth  int  `json:"layout_width"`
+		LayoutHeight int  `json:"layout_height"`
+	} `json:"updates"`
+}
+
+type AutoArrangeRequest struct {
+	Floor       int  `json:"floor"`
+	RoomTypeID  *int `json:"room_type_id,omitempty"`
+	GridColumns int  `json:"grid_columns"`
+	SpacingX    int  `json:"spacing_x"`
+	SpacingY    int  `json:"spacing_y"`
+}
+
+func (api *API) getRoomLayoutByFloor(c *gin.Context) {
+	hotelID := c.Param("id")
+	floor := c.Param("floor")
+
+	roomTypeIDStr := c.Query("room_type_id")
+	var roomTypeID *int
+	if roomTypeIDStr != "" {
+		rtID, err := strconv.Atoi(roomTypeIDStr)
+		if err == nil {
+			roomTypeID = &rtID
+		}
+	}
+
+	query := `
+		SELECT 
+			hr.id,
+			hr.hotel_id,
+			hr.room_number,
+			hr.room_type_id,
+			rt.type_name as room_type_name,
+			hr.floor,
+			hr.status,
+			hr.is_blockchain_enabled,
+			hr.layout_x,
+			hr.layout_y,
+			hr.layout_width,
+			hr.layout_height,
+			hr.layout_updated_at
+		FROM hotel_rooms hr
+		LEFT JOIN room_types rt ON hr.room_type_id = rt.id
+		WHERE hr.hotel_id = ? AND hr.floor = ?
+	`
+
+	args := []interface{}{hotelID, floor}
+	if roomTypeID != nil {
+		query += " AND hr.room_type_id = ?"
+		args = append(args, *roomTypeID)
+	}
+	query += " ORDER BY hr.room_number"
+
+	rows, err := api.DB.Raw(query, args...).Rows()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+	defer rows.Close()
+
+	var rooms []RoomLayout
+	for rows.Next() {
+		var room RoomLayout
+		err := rows.Scan(
+			&room.ID,
+			&room.HotelID,
+			&room.RoomNumber,
+			&room.RoomTypeID,
+			&room.RoomTypeName,
+			&room.Floor,
+			&room.Status,
+			&room.IsBlockchainEnabled,
+			&room.LayoutX,
+			&room.LayoutY,
+			&room.LayoutWidth,
+			&room.LayoutHeight,
+			&room.LayoutUpdatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		rooms = append(rooms, room)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"floor":            floor,
+		"hotel_id":         hotelID,
+		"room_type_filter": roomTypeID,
+		"rooms":            rooms,
+		"total":            len(rooms),
+	})
+}
+
+func (api *API) updateRoomLayout(c *gin.Context) {
+	hotelID := c.Param("id")
+	userID := c.GetInt("user_id")
+	userRole := c.GetString("user_role")
+	userHotelID := c.GetInt("hotel_id")
+
+	// Debug logging
+	log.Printf("🔍 updateRoomLayout - hotelID: %s, userID: %d, userRole: %s, userHotelID: %d",
+		hotelID, userID, userRole, userHotelID)
+
+	// Check if user is hotel admin
+	if userRole != "hotel_super_admin" && userRole != "hotel_admin" {
+		log.Printf("❌ Access denied: user role is %s", userRole)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Hotel admin access required"})
+		return
+	}
+
+	// Check if user belongs to this hotel
+	requestedHotelID := stringToInt(hotelID)
+	if userHotelID > 0 && userHotelID != requestedHotelID {
+		log.Printf("❌ Hotel mismatch: user hotel_id=%d, requested hotel_id=%d", userHotelID, requestedHotelID)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot modify layout for other hotels"})
+		return
+	}
+
+	// If userHotelID is 0 or not set, verify from database
+	if userHotelID == 0 {
+		var user User
+		if err := api.DB.First(&user, userID).Error; err == nil {
+			if user.HotelID != nil && *user.HotelID != requestedHotelID {
+				log.Printf("❌ DB check: user belongs to hotel %d, not %d", *user.HotelID, requestedHotelID)
+				c.JSON(http.StatusForbidden, gin.H{"error": "Cannot modify layout for other hotels"})
+				return
+			}
+		}
+	}
+
+	var req LayoutUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	tx := api.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	updateCount := 0
+	for _, update := range req.Updates {
+		result := tx.Model(&HotelRoom{}).
+			Where("id = ? AND hotel_id = ?", update.RoomID, hotelID).
+			Updates(map[string]interface{}{
+				"layout_x":          update.LayoutX,
+				"layout_y":          update.LayoutY,
+				"layout_width":      update.LayoutWidth,
+				"layout_height":     update.LayoutHeight,
+				"layout_updated_at": time.Now(),
+			})
+
+		if result.Error == nil && result.RowsAffected > 0 {
+			updateCount++
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save changes"})
+		return
+	}
+
+	log.Printf("✅ Room layout updated for hotel %s by user %d: %d rooms", hotelID, userID, updateCount)
+	c.JSON(http.StatusOK, gin.H{
+		"message":       "Layout updated successfully",
+		"updated_count": updateCount,
+	})
+}
+
+func (api *API) autoArrangeLayout(c *gin.Context) {
+	hotelID := c.Param("id")
+	userRole := c.GetString("user_role")
+	userHotelID := c.GetInt("hotel_id")
+
+	if userRole != "hotel_super_admin" && userRole != "hotel_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Hotel admin access required"})
+		return
+	}
+
+	if userHotelID != stringToInt(hotelID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot arrange layout for other hotels"})
+		return
+	}
+
+	var req AutoArrangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if req.GridColumns == 0 {
+		req.GridColumns = 5
+	}
+	if req.SpacingX == 0 {
+		req.SpacingX = 120
+	}
+	if req.SpacingY == 0 {
+		req.SpacingY = 100
+	}
+
+	query := api.DB.Model(&HotelRoom{}).
+		Where("hotel_id = ? AND floor = ?", hotelID, req.Floor)
+
+	if req.RoomTypeID != nil {
+		query = query.Where("room_type_id = ?", *req.RoomTypeID)
+	}
+
+	var rooms []HotelRoom
+	if err := query.Order("room_number").Find(&rooms).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+
+	tx := api.DB.Begin()
+	arrangedCount := 0
+	for i, room := range rooms {
+		col := i % req.GridColumns
+		row := i / req.GridColumns
+
+		layoutX := col * req.SpacingX
+		layoutY := row * req.SpacingY
+
+		result := tx.Model(&HotelRoom{}).Where("id = ?", room.ID).Updates(map[string]interface{}{
+			"layout_x":          layoutX,
+			"layout_y":          layoutY,
+			"layout_width":      100,
+			"layout_height":     80,
+			"layout_updated_at": time.Now(),
+		})
+
+		if result.Error == nil && result.RowsAffected > 0 {
+			arrangedCount++
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save arrangement"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":        "Layout auto-arranged successfully",
+		"arranged_count": arrangedCount,
+		"grid_columns":   req.GridColumns,
+	})
+}
+
+func (api *API) resetRoomLayout(c *gin.Context) {
+	hotelID := c.Param("id")
+	userRole := c.GetString("user_role")
+	userHotelID := c.GetInt("hotel_id")
+
+	if userRole != "hotel_super_admin" && userRole != "hotel_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Hotel admin access required"})
+		return
+	}
+
+	if userHotelID != stringToInt(hotelID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot reset layout for other hotels"})
+		return
+	}
+
+	result := api.DB.Model(&HotelRoom{}).
+		Where("hotel_id = ?", hotelID).
+		Updates(map[string]interface{}{
+			"layout_x":          nil,
+			"layout_y":          nil,
+			"layout_width":      100,
+			"layout_height":     80,
+			"layout_updated_at": nil,
+		})
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":     "Layout reset successfully",
+		"reset_count": result.RowsAffected,
+	})
 }
