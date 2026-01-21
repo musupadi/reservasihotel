@@ -1,0 +1,15 @@
+test:
+  name: Fabric Network Performance Test
+  description: Test throughput dan latency tanpa chaincode
+  workers:
+    number: 2
+  rounds:
+    - label: performance-test
+      description: Simulate workload untuk ukur performa sistem
+      txNumber: 500
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 50
+      workload:
+        module: workload/connectivity.js

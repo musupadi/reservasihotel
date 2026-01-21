@@ -1,0 +1,2 @@
+id,name,city,country,address,description,owner_name,owner_phone,owner_email,rating,status,image_url
+32,Hotel Testing,Jakarta,Indonesia,"Jl. Sudirman No. 123, Jakarta Pusat","Hotel modern di pusat kota Jakarta dengan fasilitas meeting room dan hotel room lengkap. Ideal untuk corporate event dan residential meeting.",Test Hotel Owner,+6281234567890,owner@hoteltesting.com,4.70,active,https://images.unsplash.com/photo-1566073771259-6a8506099945

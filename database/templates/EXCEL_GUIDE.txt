@@ -1,0 +1,168 @@
+===============================================
+TEMPLATE EXCEL - DATA HOTEL TESTING
+===============================================
+
+File ini berisi template lengkap untuk:
+1. Hotel Information
+2. Room Types (Hotel Rooms + Meeting Rooms)  
+3. Hotel Rooms (Physical Room Numbers)
+
+Cocok untuk dibuka di Microsoft Excel atau Google Sheets!
+
+===============================================
+CARA MENGGUNAKAN:
+===============================================
+
+1. BUKA FILE CSV DI EXCEL:
+   - Klik kanan file CSV → Open with → Excel
+   - Atau: Excel → Data → From Text/CSV
+
+2. EDIT DATA:
+   - Edit cell sesuai kebutuhan
+   - JANGAN ubah header (baris pertama)
+   - JANGAN hapus kolom
+
+3. SAVE AS CSV:
+   - File → Save As
+   - Format: CSV UTF-8 (Comma delimited)
+   - Jangan pakai "CSV (MS-DOS)"
+
+4. IMPORT KE DATABASE:
+   PowerShell:
+   cd c:\Blockchain\reservasihotel\database
+   .\import_csv.ps1
+
+===============================================
+TIPS EXCEL:
+===============================================
+
+AUTO-GENERATE ROOM NUMBERS:
+  Di Excel, gunakan formula untuk buat nomor kamar otomatis:
+  
+  Cell A2: 101
+  Cell A3: =A2+1
+  Drag down untuk auto-increment: 101, 102, 103...
+  
+  Untuk lantai 2:
+  Cell A12: 201
+  Cell A13: =A12+1
+  
+FILL SERIES:
+  Select cell 101 → Drag fill handle → Excel auto-complete 102, 103...
+
+CONCATENATE untuk Meeting Rooms:
+  =CONCATENATE("M-ALPHA-", ROW()-1)
+  Result: M-ALPHA-1, M-ALPHA-2, M-ALPHA-3
+
+FORMAT HARGA:
+  JANGAN pakai: Rp 500.000 atau 500,000
+  HARUS pakai: 500000 (angka biasa tanpa format)
+  
+  Tips: Format cell as "Number" with 0 decimal places
+
+===============================================
+SAMPLE DATA YANG SUDAH DIISI:
+===============================================
+
+HOTEL TESTING:
+- Location: Jakarta, Jl. Sudirman No. 123
+- Rating: 4.70
+- Total Rooms: 41 (35 hotel + 6 meeting)
+
+ROOM TYPES:
+[Hotel Rooms]
+- Standard Room: 500K/person (20 rooms)
+- Deluxe Room: 750K/person (10 rooms)
+- Suite Room: 1.2M/person (5 rooms)
+
+[Meeting Rooms]  
+- Alpha (10-25 pax): Half 1.5M | Full 2.5M | Board 3.5M
+- Beta (20-50 pax): Half 2.5M | Full 4M | Board 5.5M
+- Gamma (50-100 pax): Half 4M | Full 6.5M | Board 9M
+
+HOTEL ROOMS:
+- Lantai 1: 101-110 (Standard)
+- Lantai 2: 201-210 (Standard)
+- Lantai 3: 301-310 (Deluxe)
+- Lantai 4: 401-405 (Suite)
+- Lantai 5: M-ALPHA-1,2,3 (Meeting Small)
+- Lantai 6: M-BETA-1,2 (Meeting Medium)
+- Lantai 7: M-GAMMA-1 (Meeting Large)
+
+===============================================
+KOLOM PENTING - JANGAN SALAH!
+===============================================
+
+HOTELS:
+  ✓ id = 32 (fixed, jangan diubah)
+  ✓ name = nama hotel kamu
+  ✓ city = kota lokasi
+  ✓ address = alamat lengkap
+  ✓ description = deskripsi singkat
+
+ROOM TYPES:
+  ✓ hotel_id = 32 (harus sama dengan id hotel)
+  ✓ room_category = "hotel_room" atau "meeting_room"
+  ✓ pricing_type:
+      - hotel_room → "per_night"
+      - meeting_room → "half_day"
+  
+  Untuk hotel_room:
+    ✓ price_per_person = [harga]
+    ✗ kosongkan: half_day_rate, full_day_rate, full_board_rate
+  
+  Untuk meeting_room:
+    ✓ half_day_rate = [harga 4 jam]
+    ✓ full_day_rate = [harga 8 jam]  
+    ✓ full_board_rate = [harga 12 jam]
+    ✗ price_per_person = 0
+
+HOTEL ROOMS:
+  ✓ hotel_id = 32
+  ✓ room_type_id = (sesuai id dari room_types)
+  ✓ room_number = nomor kamar unik
+  ✓ floor = lantai (1-10)
+  ✓ is_blockchain_enabled = 1 (enable) atau 0 (disable)
+  ✓ status = "AVAILABLE"
+
+===============================================
+VALIDASI SEBELUM IMPORT:
+===============================================
+
+☐ Tidak ada cell kosong di kolom wajib
+☐ Harga dalam format angka (tidak ada Rp atau titik)
+☐ hotel_id sama di semua row (32)
+☐ room_type_id valid (ada di room_types)
+☐ Tidak ada duplikasi ID
+☐ room_category = hotel_room atau meeting_room
+☐ pricing_type sesuai room_category
+☐ File di-save as CSV UTF-8
+
+===============================================
+JIKA ADA ERROR SAAT IMPORT:
+===============================================
+
+"Duplicate entry":
+→ ID sudah ada, gunakan nomor lain atau script akan update
+
+"Cannot add foreign key":
+→ hotel_id atau room_type_id tidak valid
+→ Import hotels dulu, baru room_types, terakhir hotel_rooms
+
+"Data too long":  
+→ Text terlalu panjang, persingkat description/amenities
+
+"Invalid number":
+→ Ada format currency atau text di kolom numeric
+→ Hapus "Rp", titik, koma dari angka
+
+===============================================
+SUPPORT:
+===============================================
+
+Dokumentasi lengkap:
+- README.md → Penjelasan detail
+- INSTRUKSI_LENGKAP.txt → Step by step
+- QUICKSTART.md → Quick guide 5 menit
+
+Happy importing! 🎉

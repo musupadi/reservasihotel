@@ -1,0 +1,51 @@
+name: Fabric
+version: "2.0.0"
+
+caliper:
+  blockchain: fabric
+
+channels:
+  - channelName: mychannel
+    contracts:
+      - id: reservation
+        version: v1
+        language: golang
+        path: ../../chaincode/reservation
+        metadataPath: ""
+
+organizations:
+  - mspid: Org1MSP
+    identities:
+      certificates:
+        - name: 'User1'
+          clientPrivateKey:
+            path: '../../network/organizations/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/keystore/priv_sk'
+          clientSignedCert:
+            path: '../../network/organizations/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem'
+      certificates:
+        - name: 'Admin'
+          clientPrivateKey:
+            path: '../../network/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/priv_sk'
+          clientSignedCert:
+            path: '../../network/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem'
+    connectionProfile:
+      path: './connection-profile-org1.yaml'
+      discover: true
+
+  - mspid: Org2MSP
+    identities:
+      certificates:
+        - name: 'User1'
+          clientPrivateKey:
+            path: '../../network/organizations/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/keystore/priv_sk'
+          clientSignedCert:
+            path: '../../network/organizations/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/signcerts/User1@org2.example.com-cert.pem'
+      certificates:
+        - name: 'Admin'
+          clientPrivateKey:
+            path: '../../network/organizations/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/priv_sk'
+          clientSignedCert:
+            path: '../../network/organizations/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem'
+    connectionProfile:
+      path: './connection-profile-org2.yaml'
+      discover: true

@@ -1,0 +1,40 @@
+test:
+  name: quick-verification-test
+  description: Quick test to verify Caliper setup (10 transactions only)
+  workers:
+    number: 2
+  rounds:
+    # Quick test dengan hanya 10 transaksi
+    - label: quick-create-test
+      description: Quick create reservation test
+      txNumber: 10
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 5
+      workload:
+        module: workload/create-reservation.js
+        arguments:
+          hotelID: "HTL001"
+          roomTypeID: "ROOM001"
+
+    # Quick query test
+    - label: quick-query-test
+      description: Quick query all test
+      txNumber: 5
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 3
+      workload:
+        module: workload/query-all.js
+
+monitors:
+  resource:
+    - module: docker
+      options:
+        interval: 5
+        containers:
+          - peer0.org1.example.com
+          - peer0.org2.example.com
+          - orderer.example.com

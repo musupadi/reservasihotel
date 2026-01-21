@@ -1,0 +1,15 @@
+test:
+  name: Hotel Reservation Performance Test
+  description: Simulate workload untuk ukur performa
+  workers:
+    number: 2
+  rounds:
+    - label: performance
+      description: Simulate transaction workload
+      txNumber: 500
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 50
+      workload:
+        module: workload/connectivity.js

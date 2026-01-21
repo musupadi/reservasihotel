@@ -1,0 +1,15 @@
+# ==============================================================
+# Crypto Config for Orderer Organization
+# ==============================================================
+
+OrdererOrgs:
+  - Name: Orderer
+    Domain: reservation.com
+    EnableNodeOUs: true
+    
+    Specs:
+      - Hostname: orderer
+        SANS:
+          - localhost
+          - 127.0.0.1
+          - orderer.reservation.com

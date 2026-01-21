@@ -1,0 +1,15 @@
+test:
+  name: Network Connection Test
+  description: Test Fabric network connectivity
+  workers:
+    number: 1
+  rounds:
+    - label: ping
+      description: Test network connection
+      txNumber: 10
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 5
+      workload:
+        module: workload/ping.js

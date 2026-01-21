@@ -2,7 +2,7 @@ Organizations:
     - &OrdererOrg
         Name: OrdererOrg
         ID: OrdererMSP
-        MSPDir: organizations/ordererOrganizations/reservation.com/msp
+        MSPDir: ../organizations/ordererOrganizations/reservation.com/msp
         Policies:
             Readers:
                 Type: Signature
@@ -17,7 +17,7 @@ Organizations:
     - &HotelOrg
         Name: HotelOrgMSP
         ID: HotelOrgMSP
-        MSPDir: organizations/peerOrganizations/hotelorg.reservation.com/msp
+        MSPDir: ../organizations/peerOrganizations/hotelorg.reservation.com/msp
         Policies:
             Readers:
                 Type: Signature
@@ -31,36 +31,50 @@ Organizations:
             Endorsement:
                 Type: Signature
                 Rule: "OR('HotelOrgMSP.peer')"
-        AnchorPeers:
-            - Host: peer0.hotelorg.reservation.com
-              Port: 7051
 
-    - &GuestOrg
-        Name: GuestOrgMSP
-        ID: GuestOrgMSP
-        MSPDir: organizations/peerOrganizations/guestorg.reservation.com/msp
+    - &OTAOrg
+        Name: OTAOrgMSP
+        ID: OTAOrgMSP
+        MSPDir: ../organizations/peerOrganizations/otaorg.reservation.com/msp
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('GuestOrgMSP.admin', 'GuestOrgMSP.peer', 'GuestOrgMSP.client')"
+                Rule: "OR('OTAOrgMSP.admin', 'OTAOrgMSP.peer', 'OTAOrgMSP.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('GuestOrgMSP.admin', 'GuestOrgMSP.client')"
+                Rule: "OR('OTAOrgMSP.admin', 'OTAOrgMSP.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('GuestOrgMSP.admin')"
+                Rule: "OR('OTAOrgMSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('GuestOrgMSP.peer')"
-        AnchorPeers:
-            - Host: peer0.guestorg.reservation.com
-              Port: 8051
+                Rule: "OR('OTAOrgMSP.peer')"
+
+    - &PaymentOrg
+        Name: PaymentOrgMSP
+        ID: PaymentOrgMSP
+        MSPDir: ../organizations/peerOrganizations/paymentorg.reservation.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('PaymentOrgMSP.admin', 'PaymentOrgMSP.peer', 'PaymentOrgMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('PaymentOrgMSP.admin', 'PaymentOrgMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('PaymentOrgMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('PaymentOrgMSP.peer')"
 
 Capabilities:
     Channel: &ChannelCapabilities
         V2_0: true
+
     Orderer: &OrdererCapabilities
         V2_0: true
+
     Application: &ApplicationCapabilities
         V2_0: true
 
@@ -82,6 +96,7 @@ Application: &ApplicationDefaults
         Endorsement:
             Type: ImplicitMeta
             Rule: "MAJORITY Endorsement"
+
     Capabilities:
         <<: *ApplicationCapabilities
 
@@ -93,13 +108,15 @@ Orderer: &OrdererDefaults
         Consenters:
         - Host: orderer.reservation.com
           Port: 7050
-          ClientTLSCert: organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/msp/tlscacerts/tlsca.reservation.com-cert.pem
-          ServerTLSCert: organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/msp/tlscacerts/tlsca.reservation.com-cert.pem
+          ClientTLSCert: ../organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/tls/server.crt
+          ServerTLSCert: ../organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/tls/server.crt
+
     BatchTimeout: 2s
     BatchSize:
         MaxMessageCount: 10
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
+
     Organizations:
     Policies:
         Readers:
@@ -126,20 +143,34 @@ Channel: &ChannelDefaults
         Admins:
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"
+
     Capabilities:
         <<: *ChannelCapabilities
 
 Profiles:
-    TwoOrgsApplicationGenesis:
+    ThreeOrgsOrdererGenesis:
         <<: *ChannelDefaults
         Orderer:
             <<: *OrdererDefaults
             Organizations:
                 - *OrdererOrg
-            Capabilities: *OrdererCapabilities
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *HotelOrg
+                    - *OTAOrg
+                    - *PaymentOrg
+
+    ThreeOrgsChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
         Application:
             <<: *ApplicationDefaults
             Organizations:
                 - *HotelOrg
-                - *GuestOrg
-            Capabilities: *ApplicationCapabilities
+                - *OTAOrg
+                - *PaymentOrg
+            Capabilities:
+                <<: *ApplicationCapabilities

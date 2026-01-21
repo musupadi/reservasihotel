@@ -93,8 +93,8 @@ Orderer: &OrdererDefaults
         Consenters:
         - Host: orderer.reservation.com
           Port: 7050
-          ClientTLSCert: organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/msp/tlscacerts/tlsca.reservation.com-cert.pem
-          ServerTLSCert: organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/msp/tlscacerts/tlsca.reservation.com-cert.pem
+          ClientTLSCert: organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/tls/server.crt
+          ServerTLSCert: organizations/ordererOrganizations/reservation.com/orderers/orderer.reservation.com/tls/server.crt
     BatchTimeout: 2s
     BatchSize:
         MaxMessageCount: 10

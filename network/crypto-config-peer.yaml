@@ -1,0 +1,46 @@
+# ==============================================================
+# Crypto Config for Peer Organizations
+# ==============================================================
+
+PeerOrgs:
+  # Hotel Organization
+  - Name: HotelOrg
+    Domain: hotelorg.reservation.com
+    EnableNodeOUs: true
+    
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - 127.0.0.1
+    
+    Users:
+      Count: 2
+
+  # OTA Organization
+  - Name: OTAOrg
+    Domain: otaorg.reservation.com
+    EnableNodeOUs: true
+    
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - 127.0.0.1
+    
+    Users:
+      Count: 2
+
+  # Guest Organization (simplified from Payment)
+  - Name: GuestOrg
+    Domain: guestorg.reservation.com
+    EnableNodeOUs: true
+    
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - 127.0.0.1
+    
+    Users:
+      Count: 2

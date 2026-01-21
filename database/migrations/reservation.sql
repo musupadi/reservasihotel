@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 21, 2026 at 11:05 AM
+-- Generation Time: Jan 16, 2026 at 05:07 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -407,8 +407,7 @@ INSERT INTO `reservations` (`id`, `reservation_id`, `hotel_id`, `room_type_id`, 
 (9, 'RES-1768558332691', 32, 43, '2026-01-17', '2026-01-18', 13, 12, 'Meeting', '', 'Supriyadi', '123', 'musupadi@gmail.com', '', 1000000.00, 911000000.00, 'IDR', 'CONFIRMED', 'paid', 'bank_transfer', '2026-01-16 17:14:23', 'GoBackendMSP', '2026-01-16 10:12:12', '2026-01-16 10:14:23'),
 (10, 'RES-1768572716780', 32, 45, '2026-02-07', '2026-02-08', 7, 3, 'meeting', 'Test', 'Supriyadi', '123', 'musupadi@gmail.com', 'Test', 1000000.00, 113000000.00, 'IDR', 'CONFIRMED', 'paid', 'bank_transfer', '2026-01-16 21:14:31', 'GoBackendMSP', '2026-01-16 14:11:56', '2026-01-16 14:14:31'),
 (11, 'RES-1768576745983', 32, 43, '2026-01-23', '2026-01-24', 3, 3, 'Meeting', '', 'Supriyadi', '123', 'musupadi@gmail.com', '', 1000000.00, 37000000.00, 'IDR', 'PENDING', 'unpaid', '', NULL, 'GoBackendMSP', '2026-01-16 15:19:05', '2026-01-16 15:19:05'),
-(12, 'RES-1768579610288', 32, 45, '2026-01-30', '2026-01-31', 2, 2, 'Meeting', '', 'Supriyadi', '123', 'musupadi@gmail.com', '', 4500000.00, 24510000.00, 'IDR', 'PENDING', 'unpaid', '', NULL, 'GoBackendMSP', '2026-01-16 16:06:50', '2026-01-16 16:06:50'),
-(13, 'RES-1768632556907', 32, 43, '2026-01-27', '2026-01-28', 5, 5, 'Meeting', '', 'Supriyadi', '123', 'musupadi@gmail.com', '', 6000000.00, 150010000.00, 'IDR', 'PENDING', 'unpaid', '', NULL, 'GoBackendMSP', '2026-01-17 06:49:16', '2026-01-17 06:49:16');
+(12, 'RES-1768579610288', 32, 45, '2026-01-30', '2026-01-31', 2, 2, 'Meeting', '', 'Supriyadi', '123', 'musupadi@gmail.com', '', 4500000.00, 24510000.00, 'IDR', 'PENDING', 'unpaid', '', NULL, 'GoBackendMSP', '2026-01-16 16:06:50', '2026-01-16 16:06:50');
 
 -- --------------------------------------------------------
 
@@ -454,8 +453,7 @@ INSERT INTO `reservation_history` (`id`, `reservation_id`, `action`, `status`, `
 (21, 'RES-1768572716780', 'PAID', 'CONFIRMED', 'Payment received via bank_transfer', 'GoBackendMSP', '0000-00-00 00:00:00'),
 (22, 'RES-1768572716780', 'CONFIRMED', 'CONFIRMED', 'Reservation auto-confirmed after payment', 'GoBackendMSP', '0000-00-00 00:00:00'),
 (23, 'RES-1768576745983', 'CREATED', 'PENDING', 'Reservation created via Go backend with Local Simulation', 'GoBackendMSP', '0000-00-00 00:00:00'),
-(24, 'RES-1768579610288', 'CREATED', 'PENDING', 'Reservation created via Go backend with Local Simulation', 'GoBackendMSP', '0000-00-00 00:00:00'),
-(25, 'RES-1768632556907', 'CREATED', 'PENDING', 'Reservation created via Go backend with Local Simulation', 'GoBackendMSP', '0000-00-00 00:00:00');
+(24, 'RES-1768579610288', 'CREATED', 'PENDING', 'Reservation created via Go backend with Local Simulation', 'GoBackendMSP', '0000-00-00 00:00:00');
 
 -- --------------------------------------------------------
 
@@ -587,12 +585,7 @@ INSERT INTO `room_reservations` (`id`, `reservation_id`, `hotel_room_id`, `check
 (102, 'RES-1768576745983', 229, '2026-01-23', '08:00:00', '2026-01-24', '13:00:00', 5.00, '', 'BOOKED', '2026-01-16 15:19:06', '2026-01-16 15:19:06'),
 (103, 'RES-1768576745983', 224, '2026-01-23', '08:00:00', '2026-01-24', '13:00:00', 5.00, '', 'BOOKED', '2026-01-16 15:19:06', '2026-01-16 15:19:06'),
 (104, 'RES-1768579610288', 229, '2026-01-30', '12:00:00', '2026-01-31', '22:00:00', 10.00, '', 'BOOKED', '2026-01-16 16:06:50', '2026-01-16 16:06:50'),
-(105, 'RES-1768579610288', 228, '2026-01-30', '12:00:00', '2026-01-31', '22:00:00', 10.00, '', 'BOOKED', '2026-01-16 16:06:50', '2026-01-16 16:06:50'),
-(106, 'RES-1768632556907', 220, '2026-01-27', NULL, '2026-01-28', NULL, NULL, '', 'BOOKED', '2026-01-17 06:49:16', '2026-01-17 06:49:16'),
-(107, 'RES-1768632556907', 219, '2026-01-27', NULL, '2026-01-28', NULL, NULL, '', 'BOOKED', '2026-01-17 06:49:16', '2026-01-17 06:49:16'),
-(108, 'RES-1768632556907', 222, '2026-01-27', NULL, '2026-01-28', NULL, NULL, '', 'BOOKED', '2026-01-17 06:49:16', '2026-01-17 06:49:16'),
-(109, 'RES-1768632556907', 221, '2026-01-27', NULL, '2026-01-28', NULL, NULL, '', 'BOOKED', '2026-01-17 06:49:16', '2026-01-17 06:49:16'),
-(110, 'RES-1768632556907', 218, '2026-01-27', NULL, '2026-01-28', NULL, NULL, '', 'BOOKED', '2026-01-17 06:49:16', '2026-01-17 06:49:16');
+(105, 'RES-1768579610288', 228, '2026-01-30', '12:00:00', '2026-01-31', '22:00:00', 10.00, '', 'BOOKED', '2026-01-16 16:06:50', '2026-01-16 16:06:50');
 
 -- --------------------------------------------------------
 
@@ -818,19 +811,19 @@ ALTER TABLE `hotel_rooms`
 -- AUTO_INCREMENT for table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `reservation_history`
 --
 ALTER TABLE `reservation_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `room_reservations`
 --
 ALTER TABLE `room_reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=111;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT for table `room_types`

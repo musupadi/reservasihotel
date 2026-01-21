@@ -1,0 +1,35 @@
+{
+  "name": "hotel-reservation-caliper-benchmarks",
+  "version": "1.0.0",
+  "description": "Hyperledger Caliper benchmarks for hotel reservation blockchain system",
+  "main": "index.js",
+  "scripts": {
+    "benchmark": "npx caliper launch manager --caliper-workspace ./ --caliper-networkconfig networks/fabric-network.yaml --caliper-benchconfig benchmark-config.yaml --caliper-flow-only-test",
+    "benchmark-test": "npx caliper launch manager --caliper-workspace ./ --caliper-networkconfig networks/fabric-test-network.yaml --caliper-benchconfig benchmark-test-network.yaml --caliper-flow-only-test",
+    "benchmark-connectivity": "npx caliper launch manager --caliper-workspace ./ --caliper-networkconfig networks/fabric-test-network.yaml --caliper-benchconfig benchmark-connectivity.yaml --caliper-flow-only-test",
+    "bind": "npm install --no-save fabric-network@2.2.20 fabric-common@2.2.20",
+    "unbind": "npm uninstall fabric-network fabric-common",
+    "test": "node test-setup.js"
+  },
+  "keywords": [
+    "hyperledger",
+    "caliper",
+    "fabric",
+    "benchmark",
+    "blockchain",
+    "hotel",
+    "reservation"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@hyperledger/caliper-cli": "^0.6.0",
+    "@hyperledger/caliper-core": "^0.6.0",
+    "@hyperledger/caliper-fabric": "^0.6.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.19.0",
+    "npm": ">=6.14.0"
+  }
+}

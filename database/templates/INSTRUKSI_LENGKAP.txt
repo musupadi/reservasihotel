@@ -1,0 +1,148 @@
+# INSTRUKSI PENGISIAN DATA HOTEL
+
+## File yang harus diisi (urutan penting!):
+1. 1_hotels_template.csv - Data hotel utama
+2. 2_room_types_template.csv - Tipe kamar dan harga
+3. 3_hotel_rooms_template.csv - Nomor kamar fisik
+
+---
+
+## 1. HOTELS (Data Hotel)
+Kolom yang HARUS diisi:
+- id: Nomor unik hotel (gunakan 32 untuk Hotel Testing)
+- name: Nama hotel
+- city: Kota
+- address: Alamat lengkap
+- description: Deskripsi singkat
+
+Kolom OPSIONAL:
+- country: Default "Indonesia"
+- owner_name, owner_phone, owner_email: Info pemilik
+- rating: 0.00 - 5.00 (default 4.50)
+- status: "active" atau "inactive"
+- image_url: Link foto hotel (bisa pakai unsplash.com)
+
+---
+
+## 2. ROOM TYPES (Tipe Kamar & Harga)
+
+### UNTUK HOTEL ROOM (Kamar Menginap):
+```
+room_category = hotel_room
+pricing_type = per_night
+price_per_person = [harga per orang per malam]
+min_capacity = 1
+max_capacity = 2-4
+Kosongkan: hourly_rate, half_day_rate, full_day_rate, full_board_rate
+```
+
+Contoh:
+- Standard Room: Rp 500,000/person/night, capacity 1-2
+- Deluxe Room: Rp 750,000/person/night, capacity 1-2
+- Suite Room: Rp 1,200,000/person/night, capacity 1-3
+
+### UNTUK MEETING ROOM (Ruang Meeting):
+```
+room_category = meeting_room
+pricing_type = half_day
+price_per_person = 0
+half_day_rate = [harga paket 4 jam + 1x coffee break]
+full_day_rate = [harga paket 8 jam + 2x coffee break + 1x lunch]
+full_board_rate = [harga paket 12 jam + 2x coffee break + 2x meals]
+min_capacity = 10-50
+max_capacity = 25-100
+Kosongkan: hourly_rate
+```
+
+Contoh:
+- Meeting Room Kecil (10-25 orang):
+  * Half Day: Rp 1,500,000
+  * Full Day: Rp 2,500,000
+  * Full Board: Rp 3,500,000
+
+- Meeting Room Sedang (20-50 orang):
+  * Half Day: Rp 2,500,000
+  * Full Day: Rp 4,000,000
+  * Full Board: Rp 5,500,000
+
+- Meeting Room Besar (50-100 orang):
+  * Half Day: Rp 4,000,000
+  * Full Day: Rp 6,500,000
+  * Full Board: Rp 9,000,000
+
+AMENITIES (fasilitas):
+Tuliskan fasilitas yang include, contoh:
+"AC, Projector, Whiteboard, WiFi, Sound System, Coffee Break, Meals"
+
+---
+
+## 3. HOTEL ROOMS (Nomor Kamar Fisik)
+
+Isi nomor kamar yang tersedia di hotel.
+
+TIPS PENAMAAN:
+- Hotel rooms: 101, 102, 103... (lantai 1)
+- Hotel rooms: 201, 202, 203... (lantai 2)
+- Meeting rooms: M-ALPHA-1, M-BETA-1, M-GAMMA-1
+
+Kolom yang diisi:
+- id: Nomor unique (mulai dari 200)
+- hotel_id: 32 (untuk Hotel Testing)
+- room_type_id: Ambil dari file room_types (id 43, 44, 45, dst)
+- room_number: Nomor kamar
+- floor: Lantai berapa (1-10)
+- is_blockchain_enabled: 1 (bisa booking online) atau 0 (walk-in only)
+- status: AVAILABLE
+
+Contoh mapping:
+```
+Standard Room (id=43):
+- 20 kamar: 101-110 (lantai 1), 201-210 (lantai 2)
+
+Deluxe Room (id=44):
+- 10 kamar: 301-310 (lantai 3)
+
+Suite Room (id=45):
+- 5 kamar: 401-405 (lantai 4)
+
+Meeting Room Alpha (id=46):
+- 3 rooms: M-ALPHA-1, M-ALPHA-2, M-ALPHA-3 (lantai 5)
+
+Meeting Room Beta (id=47):
+- 2 rooms: M-BETA-1, M-BETA-2 (lantai 6)
+
+Meeting Room Gamma (id=48):
+- 1 room: M-GAMMA-1 (lantai 7)
+```
+
+---
+
+## CARA IMPORT:
+
+1. Isi ketiga file CSV di Excel/Google Sheets
+2. Save as CSV (UTF-8)
+3. Buka PowerShell
+4. Jalankan:
+   ```
+   cd c:\Blockchain\reservasihotel\database
+   .\import_csv.ps1
+   ```
+
+5. Verifikasi hasilnya di phpMyAdmin atau MySQL Workbench
+
+---
+
+## CHECKLIST SEBELUM IMPORT:
+
+☐ MySQL sudah running (XAMPP/WAMP)
+☐ Database "reservation" sudah ada
+☐ File CSV encoding UTF-8
+☐ Tidak ada ID yang duplikat
+☐ hotel_id sudah sesuai (32)
+☐ room_type_id valid (cek di file room_types)
+☐ Harga tidak pakai Rp atau titik ribuan (5000000 bukan 5.000.000)
+☐ Backup database sudah dibuat
+
+---
+
+Jika ada pertanyaan atau error, cek README.md untuk troubleshooting!

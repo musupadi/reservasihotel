@@ -18,6 +18,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// Service fee constant - Biaya layanan aplikasi
+const SERVICE_FEE float64 = 10000
+
 // User represents a user in the system
 type User struct {
 	ID        int       `json:"id" gorm:"primaryKey;column:id"`
@@ -71,10 +74,11 @@ type RoomType struct {
 	RoomCategory   string    `json:"room_category" gorm:"column:room_category;default:'hotel_room'"` // hotel_room or meeting_room
 	Description    string    `json:"description" gorm:"column:description"`
 	PricePerPerson float64   `json:"price_per_person" gorm:"column:price_per_person"`             // For hotel rooms (per night)
-	PricingType    string    `json:"pricing_type" gorm:"column:pricing_type;default:'per_night'"` // per_night, per_hour, half_day, full_day
-	HourlyRate     *float64  `json:"hourly_rate" gorm:"column:hourly_rate"`                       // For meeting rooms
-	HalfDayRate    *float64  `json:"half_day_rate" gorm:"column:half_day_rate"`                   // For meeting rooms (4 hours)
-	FullDayRate    *float64  `json:"full_day_rate" gorm:"column:full_day_rate"`                   // For meeting rooms (8 hours)
+	PricingType    string    `json:"pricing_type" gorm:"column:pricing_type;default:'per_night'"` // per_night, half_day, full_day, full_board
+	HourlyRate     *float64  `json:"hourly_rate" gorm:"column:hourly_rate"`                       // Deprecated - kept for backward compatibility
+	HalfDayRate    *float64  `json:"half_day_rate" gorm:"column:half_day_rate"`                   // 1x Coffee Break
+	FullDayRate    *float64  `json:"full_day_rate" gorm:"column:full_day_rate"`                   // 2x Coffee Break + 1x Meals
+	FullBoardRate  *float64  `json:"full_board_rate" gorm:"column:full_board_rate"`               // 2x Coffee Break + 2x Meals
 	MinCapacity    int       `json:"min_capacity" gorm:"column:min_capacity"`
 	MaxCapacity    int       `json:"max_capacity" gorm:"column:max_capacity"`
 	Amenities      string    `json:"amenities" gorm:"column:amenities"`
@@ -901,10 +905,6 @@ func (api *API) createReservation(c *gin.Context) {
 			// Meeting room pricing
 			var rate float64
 			switch req.PricingType {
-			case "hourly", "per_hour":
-				if roomType.HourlyRate != nil {
-					rate = *roomType.HourlyRate
-				}
 			case "half_day":
 				if roomType.HalfDayRate != nil {
 					rate = *roomType.HalfDayRate
@@ -913,10 +913,14 @@ func (api *API) createReservation(c *gin.Context) {
 				if roomType.FullDayRate != nil {
 					rate = *roomType.FullDayRate
 				}
+			case "full_board":
+				if roomType.FullBoardRate != nil {
+					rate = *roomType.FullBoardRate
+				}
 			default:
-				// Default to hourly if not specified
-				if roomType.HourlyRate != nil {
-					rate = *roomType.HourlyRate
+				// Default to half_day if not specified
+				if roomType.HalfDayRate != nil {
+					rate = *roomType.HalfDayRate
 				}
 			}
 			totalPrice += rate
@@ -927,6 +931,9 @@ func (api *API) createReservation(c *gin.Context) {
 			totalPrice += float64(req.GuestCount) * pricePerPerson
 		}
 	}
+
+	// Add service fee
+	totalPrice += SERVICE_FEE
 
 	// Default event type
 	eventType := req.EventType
@@ -1129,7 +1136,7 @@ func (api *API) getReservation(c *gin.Context) {
 	id := c.Param("id")
 	var reservation Reservation
 
-	if err := api.DB.Preload("Hotel").Preload("RoomType").Where("reservation_id = ?", id).First(&reservation).Error; err != nil {
+	if err := api.DB.Preload("Hotel").Preload("RoomType").Preload("RoomReservations.HotelRoom").Where("reservation_id = ?", id).First(&reservation).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Reservation not found"})
 			return
@@ -1171,6 +1178,30 @@ func (api *API) getReservation(c *gin.Context) {
 			"description": reservation.RoomType.Description,
 		},
 	}
+
+	// Add room reservations details
+	var roomReservations []map[string]interface{}
+	for _, rr := range reservation.RoomReservations {
+		roomData := map[string]interface{}{
+			"room_id":     rr.HotelRoomID,
+			"room_number": rr.HotelRoom.RoomNumber,
+			"floor":       rr.HotelRoom.Floor,
+			"status":      rr.Status,
+		}
+		// Add meeting room specific fields if available
+		if rr.StartTime.Valid {
+			roomData["start_time"] = rr.StartTime.String
+		}
+		if rr.EndTime.Valid {
+			roomData["end_time"] = rr.EndTime.String
+		}
+		if rr.BookingDurationHours.Valid {
+			roomData["booking_duration_hours"] = rr.BookingDurationHours.Float64
+		}
+		roomReservations = append(roomReservations, roomData)
+	}
+	formattedReservation["room_reservations"] = roomReservations
+	formattedReservation["total_rooms"] = len(roomReservations)
 
 	c.JSON(http.StatusOK, gin.H{"reservation": formattedReservation})
 }
@@ -2520,10 +2551,11 @@ func (api *API) createRoomType(c *gin.Context) {
 		RoomCategory   string   `json:"room_category"` // hotel_room or meeting_room
 		Description    string   `json:"description"`
 		PricePerPerson float64  `json:"price_per_person"` // For hotel rooms
-		PricingType    string   `json:"pricing_type"`     // per_night, per_hour, half_day, full_day
-		HourlyRate     *float64 `json:"hourly_rate"`      // For meeting rooms
-		HalfDayRate    *float64 `json:"half_day_rate"`    // For meeting rooms
-		FullDayRate    *float64 `json:"full_day_rate"`    // For meeting rooms
+		PricingType    string   `json:"pricing_type"`     // per_night, half_day, full_day, full_board
+		HourlyRate     *float64 `json:"hourly_rate"`      // Deprecated
+		HalfDayRate    *float64 `json:"half_day_rate"`    // 1x Coffee Break
+		FullDayRate    *float64 `json:"full_day_rate"`    // 2x Coffee Break + 1x Meals
+		FullBoardRate  *float64 `json:"full_board_rate"`  // 2x Coffee Break + 2x Meals
 		MinCapacity    int      `json:"min_capacity" binding:"required"`
 		MaxCapacity    int      `json:"max_capacity" binding:"required"`
 		Amenities      string   `json:"amenities"`
@@ -2559,6 +2591,7 @@ func (api *API) createRoomType(c *gin.Context) {
 		HourlyRate:     req.HourlyRate,
 		HalfDayRate:    req.HalfDayRate,
 		FullDayRate:    req.FullDayRate,
+		FullBoardRate:  req.FullBoardRate,
 		MinCapacity:    req.MinCapacity,
 		MaxCapacity:    req.MaxCapacity,
 		Amenities:      req.Amenities,
@@ -2604,10 +2637,11 @@ func (api *API) updateRoomType(c *gin.Context) {
 		RoomCategory            *string  `json:"room_category"` // hotel_room or meeting_room
 		Description             *string  `json:"description"`
 		PricePerPerson          *float64 `json:"price_per_person"`
-		PricingType             *string  `json:"pricing_type"` // per_night, per_hour, half_day, full_day
+		PricingType             *string  `json:"pricing_type"` // per_night, half_day, full_day, full_board
 		HourlyRate              *float64 `json:"hourly_rate"`
 		HalfDayRate             *float64 `json:"half_day_rate"`
 		FullDayRate             *float64 `json:"full_day_rate"`
+		FullBoardRate           *float64 `json:"full_board_rate"`
 		MinCapacity             *int     `json:"min_capacity"`
 		MaxCapacity             *int     `json:"max_capacity"`
 		TotalRooms              *int     `json:"total_rooms"`
@@ -2645,6 +2679,9 @@ func (api *API) updateRoomType(c *gin.Context) {
 	}
 	if req.FullDayRate != nil {
 		updates["full_day_rate"] = *req.FullDayRate
+	}
+	if req.FullBoardRate != nil {
+		updates["full_board_rate"] = *req.FullBoardRate
 	}
 	if req.MinCapacity != nil {
 		updates["min_capacity"] = *req.MinCapacity
@@ -3015,9 +3052,15 @@ func (api *API) getHotelStatistics(c *gin.Context) {
 	var totalRooms int64
 	api.DB.Model(&HotelRoom{}).Where("hotel_id = ?", hotelID).Count(&totalRooms)
 
-	// Count booked/occupied rooms
+	// Count booked/occupied rooms (from active reservations)
 	var bookedRooms int64
-	api.DB.Model(&HotelRoom{}).Where("hotel_id = ? AND status = ?", hotelID, "OCCUPIED").Count(&bookedRooms)
+	today := time.Now().Format("2006-01-02")
+	api.DB.Table("room_reservations").
+		Select("COUNT(DISTINCT hotel_room_id)").
+		Where("reservation_id IN (SELECT reservation_id FROM reservations WHERE hotel_id = ? AND status IN (?, ?, ?))",
+			hotelID, "CONFIRMED", "CHECKED_IN", "PAID").
+		Where("check_in <= ? AND check_out >= ?", today, today).
+		Count(&bookedRooms)
 
 	// Count pending bookings
 	var pendingBookings int64

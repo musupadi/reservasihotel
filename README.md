@@ -2,7 +2,148 @@
 
 Sistem reservasi hotel berbasis blockchain menggunakan **Hyperledger Fabric**, **Go Backend**, **React Frontend**, dan **MySQL Database**.
 
-## 📖 Quick Links
+## � Quick Start - Cara Menjalankan Sistem
+
+### **Prasyarat Sebelum Mulai:**
+✅ Docker Desktop sudah terinstall dan **HARUS RUNNING**  
+✅ XAMPP sudah terinstall (untuk MySQL)  
+✅ Go (Golang) sudah terinstall  
+✅ Node.js & npm sudah terinstall  
+
+---
+
+### **🔥 LANGKAH CEPAT - 5 Menit Setup**
+
+#### **1️⃣ Start Docker Desktop**
+```powershell
+# ⚠️ PENTING: Pastikan Docker Desktop sudah running!
+# Buka aplikasi Docker Desktop dan tunggu sampai icon berubah hijau
+# Verifikasi:
+docker ps
+# Jika muncul tabel (meskipun kosong), berarti Docker sudah siap
+```
+
+#### **2️⃣ Start MySQL Database**
+```powershell
+# Buka XAMPP Control Panel
+# Klik tombol "Start" untuk MySQL (dan Apache jika perlu)
+# Status harus berubah jadi hijau
+
+# Verifikasi MySQL running:
+# Buka browser: http://localhost/phpmyadmin
+# Pastikan database "reservation" sudah ada
+# (Jika belum ada, buat database baru dengan nama "reservation")
+```
+
+#### **3️⃣ Start Blockchain Network (Terminal 1)**
+```powershell
+# Buka PowerShell/Terminal pertama:
+cd C:\Blockchain\reservasihotel\network
+docker-compose -f docker-compose-simple.yaml up -d
+
+# Tunggu ~30 detik, lalu verifikasi (harus ada 5 containers):
+docker ps --format "table {{.Names}}\t{{.Status}}"
+
+# Expected output:
+# orderer.reservation.com          Up X minutes
+# peer0.hotelorg.reservation.com   Up X minutes
+# peer0.guestorg.reservation.com   Up X minutes
+# couchdb0                         Up X minutes
+# couchdb1                         Up X minutes
+```
+
+#### **4️⃣ Start Backend API (Terminal 2)**
+```powershell
+# Buka PowerShell/Terminal kedua:
+cd C:\Blockchain\reservasihotel\api-gateway
+
+# Jalankan backend:
+go run main.go blockchain.go fabric_client.go
+
+# Expected output:
+# [GIN-debug] Listening and serving HTTP on :8080
+# Backend running on http://localhost:8080
+```
+
+#### **5️⃣ Start Frontend (Terminal 3)**
+```powershell
+# Buka PowerShell/Terminal ketiga:
+cd C:\Blockchain\reservasihotel\web-ui
+
+# Jalankan frontend:
+npm run dev
+
+# Expected output:
+# VITE v5.x.x ready in xxx ms
+# ➜ Local: http://localhost:3000/
+```
+
+### **✅ Akses Aplikasi**
+- **Website**: http://localhost:3000
+- **API Backend**: http://localhost:8080
+- **Database**: http://localhost/phpmyadmin
+- **CouchDB**: http://localhost:5984/_utils (HotelOrg) | http://localhost:6984/_utils (GuestOrg)
+
+---
+
+### **📊 OPTIONAL: Run Hyperledger Caliper Benchmark (Terminal 4)**
+
+**Caliper** digunakan untuk performance testing blockchain network. Ini **OPTIONAL** - hanya jalankan jika ingin mengukur performa sistem.
+
+```powershell
+# Buka PowerShell/Terminal keempat:
+cd C:\Blockchain\reservasihotel\caliper-benchmarks
+
+# Jalankan benchmark:
+npm run benchmark-test
+
+# Expected output:
+# 2 workers connected...
+# Started round 1 (query)...
+# Benchmark finished...
+# Report generated: report.html
+
+# Lihat hasil benchmark:
+start report.html
+# Atau buka manual: C:\Blockchain\reservasihotel\caliper-benchmarks\report.html
+```
+
+**Apa yang di-test Caliper?**
+- ✅ Transaction throughput (TPS - Transactions Per Second)
+- ✅ Transaction latency (response time)
+- ✅ Resource usage (CPU, memory)
+- ✅ Success/failure rate
+- ✅ Network performance
+
+**Kapan perlu run Caliper?**
+- ✅ Untuk skripsi/thesis - data performa blockchain
+- ✅ Testing sebelum production deployment
+- ✅ Benchmarking setelah perubahan chaincode
+- ✅ Membandingkan performa konfigurasi berbeda
+
+**Tidak perlu run Caliper jika:**
+- ❌ Hanya development/testing fitur aplikasi
+- ❌ Hanya ingin test UI/UX
+- ❌ Tidak butuh data performa untuk penulisan
+
+---
+
+### **⏹️ Cara Stop Semua Services**
+```powershell
+# Stop Backend & Frontend (& Caliper jika sedang running):
+# Tekan Ctrl+C di Terminal 2, Terminal 3, dan Terminal 4
+
+# Stop Blockchain Network:
+cd C:\Blockchain\reservasihotel\network
+docker-compose -f docker-compose-simple.yaml down
+
+# Stop MySQL:
+# Buka XAMPP Control Panel → Klik "Stop" untuk MySQL
+```
+
+---
+
+## 📖 Dokumentasi Lengkap
 
 - 📦 **[INSTALLATION.md](INSTALLATION.md)** - First-time setup guide (npm install, go mod, database setup)
 - ⚡ **[QUICKSTART.md](QUICKSTART.md)** - Quick 3-terminal startup
@@ -71,27 +212,55 @@ Pastikan software berikut sudah terinstall:
 
 ## 📦 Installation & Setup
 
-### **STEP 0: Clone Repository (jika dari GitHub)**
+> **💡 Tip**: Bagian ini untuk setup pertama kali. Jika sudah pernah install dependencies, langsung skip ke [Quick Start](#-quick-start---cara-menjalankan-sistem).
 
-```powershell
-# Clone repository
-git clone https://github.com/YOUR_USERNAME/reservasihotel.git
-cd reservasihotel
-```
+### **Prerequisites - Software yang Harus Terinstall**
 
-### **STEP 0.1: Setup Go Backend Dependencies**
+Pastikan software berikut sudah terinstall:
+
+#### 1. **Docker Desktop** ⚠️ WAJIB
+- Download: https://www.docker.com/products/docker-desktop
+- Versi: 20.10+
+- **PENTING**: Docker HARUS running sebelum start Fabric network
+- Verifikasi: `docker --version` dan `docker-compose --version`
+
+#### 2. **XAMPP** (untuk MySQL)
+- Download: https://www.apachefriends.org/
+- Versi: 8.0 atau lebih baru
+- Verifikasi: Buka XAMPP Control Panel
+
+#### 3. **Go (Golang)**
+- Download: https://go.dev/dl/
+- Versi: 1.19+ (Recommended: 1.21+)
+- Verifikasi: `go version`
+
+#### 4. **Node.js & npm**
+- Download: https://nodejs.org/
+- Versi: 16.x+ (Recommended: 18.x atau 20.x LTS)
+- Verifikasi: `node --version` dan `npm --version`
+
+#### 5. **Git** (Optional)
+- Download: https://git-scm.com/downloads
+- Verifikasi: `git --version`
+
+---
+
+## � Setup Pertama Kali (First Time Installation)
+
+**⚠️ Jalankan langkah ini HANYA SEKALI saat pertama kali setup project!**
+
+### **STEP 0.1: Install Go Backend Dependencies**
 
 ```powershell
 cd C:\Blockchain\reservasihotel\api-gateway
 
-# Download Go dependencies
+# Download semua Go dependencies
 go mod download
 
 # Verify dependencies
 go mod verify
 
-# (Optional) Tidy up dependencies
-go mod tidy
+# Expected: "all modules verified"
 ```
 
 **Expected modules:**
@@ -102,16 +271,15 @@ go mod tidy
 - `github.com/joho/godotenv` - Environment variables
 - `github.com/gin-contrib/cors` - CORS middleware
 
-### **STEP 0.2: Setup React Frontend Dependencies**
+### **STEP 0.2: Install React Frontend Dependencies**
 
 ```powershell
 cd C:\Blockchain\reservasihotel\web-ui
 
-# Install Node.js dependencies
+# Install semua npm packages
 npm install
 
-# (Optional) Update dependencies
-npm update
+# Tunggu ~2-5 menit (tergantung koneksi internet)
 ```
 
 **Expected packages:**
@@ -122,44 +290,51 @@ npm update
 - `axios` - HTTP client
 - `react-hot-toast` - Notifications
 
-**Installation time:** ~2-5 menit (tergantung koneksi internet)
-
 ### **STEP 0.3: Setup MySQL Database**
 
 ```powershell
-# 1. Start XAMPP MySQL
-# 2. Buka phpMyAdmin: http://localhost/phpmyadmin
-# 3. Buat database baru: "reservation"
-# 4. Import schema (jika ada file .sql)
+# 1. Start XAMPP → Start MySQL
+# 2. Buka browser: http://localhost/phpmyadmin
+# 3. Klik "New" atau "Databases"
+# 4. Database name: "reservation"
+# 5. Klik "Create"
+
+# Atau via SQL command:
+CREATE DATABASE IF NOT EXISTS reservation;
 ```
 
-**Create Tables Manually (jika belum ada):**
+**Create Tables (Opsional - jika diperlukan):**
 ```sql
--- Database: reservation
-CREATE DATABASE IF NOT EXISTS reservation;
 USE reservation;
 
 -- Table: hotels
-CREATE TABLE hotels (
+CREATE TABLE IF NOT EXISTS hotels (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
-    location VARCHAR(255),
-    rating DECIMAL(3,2),
+    address TEXT,
+    city VARCHAR(100),
+    country VARCHAR(100),
+    description TEXT,
+    rating INT,
+    image_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Table: room_types
-CREATE TABLE room_types (
+CREATE TABLE IF NOT EXISTS room_types (
     id INT PRIMARY KEY AUTO_INCREMENT,
     hotel_id INT,
     type_name VARCHAR(100),
-    price DECIMAL(10,2),
-    capacity INT,
-    FOREIGN KEY (hotel_id) REFERENCES hotels(id)
+    description TEXT,
+    max_guests INT,
+    base_price DECIMAL(10,2),
+    currency VARCHAR(3),
+    FOREIGN KEY (hotel_id) REFERENCES hotels(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Table: reservations
-CREATE TABLE reservations (
+CREATE TABLE IF NOT EXISTS reservations (
     id INT PRIMARY KEY AUTO_INCREMENT,
     reservation_id VARCHAR(100) UNIQUE,
     hotel_id INT,
@@ -179,7 +354,7 @@ CREATE TABLE reservations (
 );
 
 -- Table: reservation_history
-CREATE TABLE reservation_history (
+CREATE TABLE IF NOT EXISTS reservation_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
     reservation_id VARCHAR(100),
     action VARCHAR(50),
@@ -188,34 +363,14 @@ CREATE TABLE reservation_history (
 );
 ```
 
-### **STEP 0.4: Setup Hyperledger Fabric Network**
+### **STEP 0.4: Verify Installation**
 
 ```powershell
-cd C:\Blockchain\reservasihotel\network
-
-# Fabric CLI tools sudah ada di folder bin/
-# Crypto materials akan di-generate otomatis saat docker-compose up
-
-# Verifikasi Docker images (download jika belum ada)
-docker images | findstr hyperledger
-
-# Jika belum ada, pull images:
-docker pull hyperledger/fabric-peer:2.5
-docker pull hyperledger/fabric-orderer:2.5
-docker pull hyperledger/fabric-tools:2.5
-docker pull couchdb:3.3.2
-```
-
-### **STEP 0.5: Verification Checklist** ✅
-
-Sebelum menjalankan sistem, pastikan semua ini sudah OK:
-
-```powershell
-# ✅ Check Go
+# ✅ Check Go version
 go version
-# Expected: go version go1.21.x windows/amd64 (atau lebih baru)
+# Expected: go version go1.21.x windows/amd64
 
-# ✅ Check Node.js
+# ✅ Check Node.js & npm
 node --version
 npm --version
 # Expected: v18.x.x atau v20.x.x dan npm 9.x.x+
@@ -223,104 +378,31 @@ npm --version
 # ✅ Check Docker
 docker --version
 docker-compose --version
-docker ps
-# Expected: Docker Desktop running, no errors
+# Expected: Docker version 20.10+ dan docker-compose version 1.29+
 
-# ✅ Check XAMPP MySQL
-# Buka http://localhost/phpmyadmin
-# Pastikan database "reservation" sudah ada
-
-# ✅ Check Go dependencies
+# ✅ Check Go dependencies installed
 cd C:\Blockchain\reservasihotel\api-gateway
-go mod verify
-# Expected: all modules verified
+go list -m all
+# Should show list of modules
 
-# ✅ Check npm dependencies
+# ✅ Check npm packages installed
 cd C:\Blockchain\reservasihotel\web-ui
 npm list --depth=0
-# Expected: list of installed packages
-
-# ✅ Check Fabric binaries
-cd C:\Blockchain\reservasihotel\bin
-ls peer.exe
-# Expected: File exists
+# Should show installed packages without errors
 ```
 
-**Jika semua ✅ maka Anda siap menjalankan sistem!**
+**✅ Jika semua check berhasil, Anda siap menjalankan sistem!**
 
 ---
 
-## 🚀 Cara Menjalankan Sistem
-
-### **STEP 1: Start MySQL Database**
-
-```
-1. Buka XAMPP Control Panel
-2. Klik "Start" untuk Apache dan MySQL
-3. Buka browser: http://localhost/phpmyadmin
-4. Buat database: "reservation"
-```
-
-### **STEP 2: Start Hyperledger Fabric Network**
-
-```powershell
-# Pastikan Docker Desktop running
-docker ps
-
-# Start Fabric Network
-cd C:\Blockchain\reservasihotel\network
-docker-compose -f docker-compose-simple.yaml up -d
-
-# Verifikasi containers running (harus ada 5 containers)
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-```
-
-**Expected Output:**
-```
-NAMES                              STATUS          PORTS
-peer0.guestorg.reservation.com     Up X minutes    0.0.0.0:8051->8051/tcp
-peer0.hotelorg.reservation.com     Up X minutes    0.0.0.0:7051->7051/tcp
-couchdb1                           Up X minutes    0.0.0.0:6984->5984/tcp
-couchdb0                           Up X minutes    0.0.0.0:5984->5984/tcp
-orderer.reservation.com            Up X minutes    0.0.0.0:7050->7050/tcp
-```
-
-### **STEP 3: Start Go API Backend**
-
-```powershell
-# Buka terminal baru
-cd C:\Blockchain\reservasihotel\api-gateway
-go run main.go blockchain.go fabric_client.go
-```
-
-**Expected Output:**
-```
-[GIN-debug] Listening and serving HTTP on :8080
-Backend running on http://localhost:8080
-```
-
-### **STEP 4: Start React Frontend**
-
-```powershell
-# Buka terminal baru
-cd C:\Blockchain\reservasihotel\web-ui
-npm run dev
-```
-
-**Expected Output:**
-```
-  VITE v5.x.x  ready in xxx ms
-  ➜  Local:   http://localhost:3000/
-```
-
 ## 🌐 Access Points
 
-- **Web UI**: http://localhost:3000
-- **API Gateway**: http://localhost:8080
+- **Web UI (Frontend)**: http://localhost:3000
+- **API Gateway (Backend)**: http://localhost:8080
+- **MySQL Database**: http://localhost/phpmyadmin
 - **CouchDB UIs**:
-  - HotelOrg: http://localhost:5984/_utils
-  - OTAOrg: http://localhost:7984/_utils
-  - PaymentOrg: http://localhost:8984/_utils
+  - HotelOrg: http://localhost:5984/_utils (username: admin, password: adminpw)
+  - GuestOrg: http://localhost:6984/_utils (username: admin, password: adminpw)
 
 ## 📁 Project Structure
 
@@ -735,6 +817,10 @@ go run main.go blockchain.go fabric_client.go
 # Terminal 3: Frontend
 cd C:\Blockchain\reservasihotel\web-ui
 npm run dev
+
+# Terminal 4 (Optional): Caliper Benchmark
+cd C:\Blockchain\reservasihotel\caliper-benchmarks
+npm run benchmark-test
 ```
 
 ### **Restart Services**
